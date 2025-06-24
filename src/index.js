@@ -20,5 +20,5 @@ app.listen(puerto, () => {
 
 
 //Rutas
-app.use("/api", require("./src/routes/index.routes"));
+app.use("/api", require("./routes/index.routes"));
 
