@@ -1,7 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 require("./db/config.db.js");
+
 const morgan = require("morgan");
+
 
 const app = express();
 const puerto = process.env.PORT || 3005;
