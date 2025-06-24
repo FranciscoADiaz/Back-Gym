@@ -4,7 +4,7 @@ require("./db/config.db.js");
 const morgan = require("morgan");
 
 const app = express();
-const puerto = process.env.PORT || 3001;
+const puerto = process.env.PORT || 3005;
 
 // Middlewares
 app.use(cors());
@@ -15,3 +15,8 @@ app.use(morgan("dev"));
 app.listen(puerto, () => {
   console.log("Servidor funcionando en el puerto", puerto);
 });
+
+
+//Rutas
+app.use("/api", require("./src/routes/index.routes"));
+
