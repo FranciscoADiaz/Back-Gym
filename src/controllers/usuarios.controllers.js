@@ -1,6 +1,13 @@
 const { registroUsuarioDb, inicioSesionUsuarioDb, habilitarDeshabilitarUsuarioDb } = require("../services/usuarios.services");
+const {validationResult} = require("express-validator");
+
 
 const registroUsuario = async (req, res) => {
+  const respuesta = validationResult(req);
+  if (!respuesta.isEmpty()) {
+    return res.status(422).json({ msg: respuesta.array() });
+  }
+
   const { msg, statusCode, error } = await registroUsuarioDb(req.body); 
  try { 
   res.status(statusCode).json({msg});
@@ -12,6 +19,11 @@ const registroUsuario = async (req, res) => {
 }
 
 const inicioSesionUsuario = async (req, res) => {
+  const respuesta = validationResult(req);
+  if (!respuesta.isEmpty()) {
+    return res.status(422).json({ msg: respuesta.array() });
+  }
+ 
   const { msg, statusCode, token, error } = await inicioSesionUsuarioDb(req.body);
   try {
     res.status(statusCode).json({ msg, token });
@@ -24,6 +36,12 @@ const inicioSesionUsuario = async (req, res) => {
 
 
 const habilitarDeshabilitarUsuario = async (req, res) => {
+
+  const respuesta = validationResult(req);
+  if (!respuesta.isEmpty()) {
+    return res.status(422).json({ msg: respuesta.array() });
+  }
+
   const { msg, statusCode, error } = await habilitarDeshabilitarUsuarioDb(req.params.id);
   try {
     res.status(statusCode).json({ msg });
