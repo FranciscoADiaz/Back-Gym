@@ -46,7 +46,8 @@ const confirmarContrasenia = await argon.verify(usuarioExiste.contrasenia, body.
         const payload = {
          idUsuario: usuarioExiste._id,
          nombreUsuario: usuarioExiste.nombreUsuario,
-         rolUsuario: usuarioExiste.rol
+         rolUsuario: usuarioExiste.rol,
+         estadoUsuario: usuarioExiste.estado
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET)
