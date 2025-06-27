@@ -22,3 +22,4 @@ app.listen(puerto, () => {
 //Rutas
 app.use("/api", require("./routes/index.routes"));
 
+module.exports = app;
