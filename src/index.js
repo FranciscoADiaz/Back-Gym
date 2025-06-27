@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-require("./db/config.db.js");
+require("./DB/config.db.js");
 
 const morgan = require("morgan");
 
