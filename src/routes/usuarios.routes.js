@@ -1,6 +1,6 @@
 const {Router} = require('express');
 const router = Router();    
-const { registroUsuario, inicioSesionUsuario, habilitarDeshabilitarUsuario } = require("../controllers/usuarios.controllers");
+const { registroUsuario, inicioSesionUsuario, habilitarDeshabilitarUsuario, obtenerTodosLosUsuarios } = require("../controllers/usuarios.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require('express-validator');
 
@@ -50,6 +50,8 @@ router.put("/enableDisable/:id",
   auth("admin"), habilitarDeshabilitarUsuario);
 
 
+  router.get("/", obtenerTodosLosUsuarios);
+  
 
 module.exports = router;
 
