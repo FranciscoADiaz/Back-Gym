@@ -2,6 +2,7 @@ const UsuariosModel = require("../models/usuarios.model");
 const argon = require("argon2");
 const jwt = require("jsonwebtoken");
 
+
 const registroUsuarioDb = async (body) => {
   try {
   const nuevoUsuario = new UsuariosModel(body);
@@ -109,8 +110,28 @@ catch (error) {
 }
 }
 
+
+const obtenerTodosLosUsuariosDb = async () => {
+  try {
+    const usuarios = await UsuariosModel.find();
+
+    return {
+      usuarios,
+      statusCode: 200,
+    };
+  } catch (error) {
+    return {
+      error,
+      statusCode: 500,
+    };
+  }
+};
+
+
+
 module.exports = {
   registroUsuarioDb,
   inicioSesionUsuarioDb,
-  habilitarDeshabilitarUsuarioDb
+  habilitarDeshabilitarUsuarioDb,
+  obtenerTodosLosUsuariosDb
 };
