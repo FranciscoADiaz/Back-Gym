@@ -1,5 +1,6 @@
-const { registroUsuarioDb, inicioSesionUsuarioDb, habilitarDeshabilitarUsuarioDb } = require("../services/usuarios.services");
-const {validationResult} = require("express-validator");
+const { registroUsuarioDb, inicioSesionUsuarioDb, habilitarDeshabilitarUsuarioDb, obtenerTodosLosUsuariosDb
+ } = require("../services/usuarios.services");
+const { validationResult } = require("express-validator");
 
 
 const registroUsuario = async (req, res) => {
@@ -50,8 +51,21 @@ const habilitarDeshabilitarUsuario = async (req, res) => {
   }
 }
 
+
+const obtenerTodosLosUsuarios = async (req, res) => {
+  const { usuarios, statusCode, error } = await obtenerTodosLosUsuariosDb();
+  try {
+    res.status(statusCode).json({ usuarios });
+  } catch {
+    res.status(statusCode).json({ error });
+  }
+};
+
+
+
 module.exports = {
   registroUsuario,
   inicioSesionUsuario,
-  habilitarDeshabilitarUsuario
+  habilitarDeshabilitarUsuario,
+  obtenerTodosLosUsuarios
 };
