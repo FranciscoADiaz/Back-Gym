@@ -11,8 +11,8 @@ const registroUsuarioDb = async (body) => {
 
   return {
     statusCode: 201,
-    msg: "Usuario registrado exitosamente",
-  }
+    msg: "Recibirás un correo de confirmación 💪",
+  };
   } catch (error) {
     return {
       error,
