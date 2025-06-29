@@ -5,7 +5,7 @@ const auth = require("../middlewares/auth");
 const { check } = require('express-validator');
 
 
-router.post("/register",
+router.post("/registrarse",
   [
       check("nombreUsuario", "Campo NOMBRE esta vacío").notEmpty(),
       check(
@@ -26,7 +26,7 @@ router.post("/register",
     ],
    registroUsuario);
 
-router.post("/login",
+router.post("/iniciarsesion",
   [  
       check("nombreUsuario", "Campo NOMBRE esta vacio").notEmpty(),
       check(
