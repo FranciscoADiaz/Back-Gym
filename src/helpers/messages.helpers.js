@@ -1,16 +1,15 @@
 const transporter = require("./nodemailer.helpers");
 
-const registroExitoso = async (userEmail, userName) => {
+const registroExitoso = async (emailUsuario, nombreUsuario) => {
   const info = await transporter.sendMail({
-    from: `"Comision-web-10" <${process.env.GMAIL_USER}>`,
-    to: `${userEmail}`,
-    subject: `Bienvenido  ${userName} ✔`,
-    text: "En breve podras ingresar a esta pagina web que transformara tu vida", // plain‑text body
+    from: `"Tucu-Gym" <${process.env.GMAIL_USER}>`,
+    to: `${emailUsuario}`,
+    subject: `Bienvenido  ${nombreUsuario} ✔`,
+    text: "En breve podras iniciar sesión",
     html: `
-    <img src="https://i.pinimg.com/originals/37/1a/c8/371ac843551c2f299675c76d510eab62.gif" alt="gif1">
-    <h1>Gracias por ser parte de esta comunidad</h1>
-    
-    `, // HTML body
+    <img src="https://png.pngtree.com/png-clipart/20231015/original/pngtree-man-character-training-at-the-gym-vector-illustration-png-image_13302900.png" alt="gif">
+    <h1>Gracias por registrarte en nuestra web </h1> ${nombreUsuario}
+    `,
   });
 
   return {
@@ -19,17 +18,17 @@ const registroExitoso = async (userEmail, userName) => {
   };
 };
 
-const recoveryPassEmail = async (userEmail, token) => {
+const recoveryPassEmail = async (emailUsuario, token) => {
   const info = await transporter.sendMail({
-    from: `"Comision-web-10" <${process.env.GMAIL_USER}>`,
-    to: `${userEmail}`,
-    subject: `Falta poco para que recuperes tu contraseña ✔`,
+    from: `"Tucu-Gym" <${process.env.GMAIL_USER}>`,
+    to: `${emailUsuario}`,
+    subject: `Recuperación de contraseña`,
     html: `
-    <img src="https://media.tenor.com/FWMGiswEeZUAAAAM/password.gif" alt="gif1">
+    <img src="https://media.tenor.com/FWMGiswEeZUAAAAM/password.gif" alt="gif">
     <h1>Gracias por ser parte de esta comunidad</h1>
     <a href="${process.env.URL_FRONT}/recoveryPass?token=${token}">Ir a la pagina</a>
     
-    `, // HTML body
+    `,
   });
   return {
     info: info.response.includes("OK"),

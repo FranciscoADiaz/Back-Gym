@@ -1,6 +1,7 @@
 const UsuariosModel = require("../models/usuarios.model");
 const argon = require("argon2");
 const jwt = require("jsonwebtoken");
+const { registroExitoso } = require("../helpers/messages.helpers");
 
 
 const registroUsuarioDb = async (body) => {
@@ -9,11 +10,15 @@ const registroUsuarioDb = async (body) => {
   nuevoUsuario.contrasenia = await argon.hash(nuevoUsuario.contrasenia)
   await nuevoUsuario.save();
 
+  console.log("📤 Enviando email a:", nuevoUsuario.emailUsuario);
+  await registroExitoso(nuevoUsuario.emailUsuario, nuevoUsuario.nombreUsuario);
+  console.log("✅ Email enviado con éxito");
   return {
     statusCode: 201,
     msg: "Recibirás un correo de confirmación 💪",
   };
   } catch (error) {
+    console.log(error);
     return {
       error,
       statusCode: 500
