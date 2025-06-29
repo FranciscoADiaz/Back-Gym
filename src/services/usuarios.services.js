@@ -14,7 +14,6 @@ const registroUsuarioDb = async (body) => {
     msg: "Usuario registrado exitosamente",
   }
   } catch (error) {
-  
     return {
       error,
       statusCode: 500
@@ -54,9 +53,10 @@ const confirmarContrasenia = await argon.verify(usuarioExiste.contrasenia, body.
         const token = jwt.sign(payload, process.env.JWT_SECRET)
 
         return {
-          statusCode: 200,
           msg: "Inicio de sesión exitoso",
           token,
+          rolUsuario: usuarioExiste.rol,
+          statusCode: 200
         };
 
       }
