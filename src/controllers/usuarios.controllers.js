@@ -25,9 +25,9 @@ const inicioSesionUsuario = async (req, res) => {
     return res.status(422).json({ msg: respuesta.array() });
   }
  
-  const { msg, statusCode, token, error } = await inicioSesionUsuarioDb(req.body);
+  const { msg, statusCode, token, error, rolUsuario } = await inicioSesionUsuarioDb(req.body);
   try {
-    res.status(statusCode).json({ msg, token });
+    res.status(statusCode).json({ msg, token, rolUsuario });
 
   } catch  {
     res.status(statusCode).json({ error });
