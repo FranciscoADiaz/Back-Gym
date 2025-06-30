@@ -6,19 +6,21 @@ const { registroExitoso } = require("../helpers/messages.helpers");
 
 const registroUsuarioDb = async (body) => {
   try {
-  const nuevoUsuario = new UsuariosModel(body);
-  nuevoUsuario.contrasenia = await argon.hash(nuevoUsuario.contrasenia)
-  await nuevoUsuario.save();
+    const nuevoUsuario = new UsuariosModel(body);
+    nuevoUsuario.contrasenia = await argon.hash(nuevoUsuario.contrasenia);
+    await nuevoUsuario.save();
 
-  console.log("📤 Enviando email a:", nuevoUsuario.emailUsuario);
-  await registroExitoso(nuevoUsuario.emailUsuario, nuevoUsuario.nombreUsuario);
-  console.log("✅ Email enviado con éxito");
-  return {
-    statusCode: 201,
-    msg: "Recibirás un correo de confirmación 💪",
-  };
+    /* para cuando configure nodemailer
+   await registroExitoso(nuevoUsuario.emailUsuario, nuevoUsuario.nombreUsuario);
+  
+   */
+
+    return {
+      statusCode: 201,
+      msg: "Recibirás un correo de confirmación 💪",
+    };
   } catch (error) {
-    console.log(error);
+    console.log("Error al registrar usuario:", error);
     return {
       error,
       statusCode: 500
