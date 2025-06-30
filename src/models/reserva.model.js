@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const ReservaSchema = new mongoose.Schema({
+  idUsuario: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Usuarios",
+    required: true,
+  },
   nombreUsuario: { type: String, required: true },
   fecha: { type: Date, required: true },
   hora: { type: String, required: true },
