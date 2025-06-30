@@ -10,17 +10,15 @@ const registroUsuarioDb = async (body) => {
     nuevoUsuario.contrasenia = await argon.hash(nuevoUsuario.contrasenia);
     await nuevoUsuario.save();
 
-    /* para cuando configure nodemailer
+  /* para cuando configure nodemailer sino no me deja registrar
    await registroExitoso(nuevoUsuario.emailUsuario, nuevoUsuario.nombreUsuario);
-  
    */
-
-    return {
-      statusCode: 201,
-      msg: "Recibirás un correo de confirmación 💪",
-    };
+  
+  return {
+    statusCode: 201,
+    msg: "Recibirás un correo de confirmación 💪",
+  };
   } catch (error) {
-    console.log("Error al registrar usuario:", error);
     return {
       error,
       statusCode: 500
