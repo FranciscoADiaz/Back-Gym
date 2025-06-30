@@ -1,7 +1,7 @@
 const UsuariosModel = require("../models/usuarios.model");
 const argon = require("argon2");
 const jwt = require("jsonwebtoken");
-const { registroExitoso } = require("../helpers/messages.helpers");
+
 
 
 const registroUsuarioDb = async (body) => {
@@ -11,6 +11,7 @@ const registroUsuarioDb = async (body) => {
   await nuevoUsuario.save();
 
   /* para cuando configure nodemailer sino no me deja registrar
+  const { registroExitoso } = require("../helpers/messages.helpers");
    await registroExitoso(nuevoUsuario.emailUsuario, nuevoUsuario.nombreUsuario);
    */
   
