@@ -6,7 +6,6 @@ const ReservaSchema = new mongoose.Schema({
     ref: "Usuarios",
     required: true,
   },
-  nombreUsuario: { type: String, required: true },
   fecha: { type: Date, required: true },
   hora: { type: String, required: true },
   tipoClase: { type: String, required: true },
