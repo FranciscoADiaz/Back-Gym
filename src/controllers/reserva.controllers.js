@@ -9,7 +9,7 @@ const crearReserva = async (req, res) => {
     const reserva = await crearReservaService(req.body);
     res.status(201).json({ msg: "Reserva creada con éxito", reserva });
   } catch (error) {
-    res.status(500).json({ msg: "Error al crear reserva", error });
+    res.status(500).json({ msg: "Debes iniciar sesión para reservar", error });
   }
 };
 

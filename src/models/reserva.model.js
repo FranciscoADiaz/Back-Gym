@@ -6,9 +6,10 @@ const ReservaSchema = new mongoose.Schema({
     ref: "Usuarios",
     required: true,
   },
+  profesor : {type: String, required: true},
+  tipoClase: { type: String, required: true },
   fecha: { type: Date, required: true },
   hora: { type: String, required: true },
-  tipoClase: { type: String, required: true },
   estado: { type: String, default: "pendiente" },
 });
 
