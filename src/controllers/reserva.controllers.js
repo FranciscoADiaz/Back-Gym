@@ -2,6 +2,7 @@ const {
   crearReservaService,
   obtenerReservasService,
   cancelarReservaService,
+  obtenerClasesDelDiaService,
 } = require("../services/reserva.services");
 
 const crearReserva = async (req, res) => {
@@ -9,7 +10,7 @@ const crearReserva = async (req, res) => {
     const reserva = await crearReservaService(req.body);
     res.status(201).json({ msg: "Reserva creada con éxito", reserva });
   } catch (error) {
-    res.status(500).json({ msg: "Error al crear reserva", error });
+    res.status(500).json({ msg: "Debes iniciar sesión para reservar", error });
   }
 };
 
@@ -31,8 +32,23 @@ const cancelarReserva = async (req, res) => {
   }
 };
 
+const obtenerClasesDelDia = async (req, res) => {
+  try {
+    const clasesDelDia = await obtenerClasesDelDiaService();
+    res.status(200).json(clasesDelDia);
+  } catch (error) {
+    console.error("⛔ Error al obtener las clases del día:", error);
+    res.status(500).json({
+      msg: "Error al obtener las clases del día",
+      error: error.message || error,
+    });
+  }
+};
+
+
 module.exports = {
   crearReserva,
   obtenerReservas,
   cancelarReserva,
+  obtenerClasesDelDia,
 };

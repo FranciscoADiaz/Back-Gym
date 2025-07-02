@@ -4,14 +4,10 @@ const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
 
 const {
-  crearReserva,
-  obtenerReservas,
-  cancelarReserva,
+  obtenerClasesDelDia,
 } = require("../controllers/reserva.controllers");
 
-router.post("/", crearReserva);
-router.get("/", obtenerReservas);
-router.delete("/:id", cancelarReserva);
 
+router.get("/", obtenerClasesDelDia);
 
 module.exports = router;
