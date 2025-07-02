@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const ReservaSchema = new mongoose.Schema({
   idUsuario: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Usuarios",
+    ref: "usuarios",
     required: true,
   },
   profesor : {type: String, required: true},
