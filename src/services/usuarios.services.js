@@ -6,9 +6,9 @@ const jwt = require("jsonwebtoken");
 
 const registroUsuarioDb = async (body) => {
   try {
-  const nuevoUsuario = new UsuariosModel(body);
-  nuevoUsuario.contrasenia = await argon.hash(nuevoUsuario.contrasenia)
-  await nuevoUsuario.save();
+    const nuevoUsuario = new UsuariosModel(body);
+    nuevoUsuario.contrasenia = await argon.hash(nuevoUsuario.contrasenia);
+    await nuevoUsuario.save();
 
   /* para cuando configure nodemailer sino no me deja registrar
   const { registroExitoso } = require("../helpers/messages.helpers");
