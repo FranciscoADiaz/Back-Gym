@@ -11,7 +11,7 @@ const puerto = process.env.PORT || 3005;
 
 app.use(cors({
   origin: "https://front-gym-rho.vercel.app"
-});
+}));
 
 app.use(express.json());
 app.use(morgan("dev"));
