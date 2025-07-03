@@ -1,8 +1,12 @@
 const Reserva = require("../models/reserva.model");
 const Usuarios = require("../models/usuarios.model");
 
+// ✅ Guarda la reserva con la fecha y hora reales al momento de crear
 const crearReservaService = async (datos) => {
-  const nuevaReserva = new Reserva(datos);
+  const nuevaReserva = new Reserva({
+    ...datos,
+    fecha: new Date(), // ahora mismo
+  });
   return await nuevaReserva.save();
 };
 
@@ -17,7 +21,7 @@ const cancelarReservaService = async (id) => {
 const obtenerClasesDelDiaService = async () => {
   const ahora = new Date();
 
-  // 🔧 Creamos los rangos usando hora local (del servidor, en Argentina)
+  // 🔧 Rango para hoy usando hora local (del servidor, UTC-3 si está en Argentina)
   const hoyLocal = new Date(
     ahora.getFullYear(),
     ahora.getMonth(),
@@ -26,7 +30,7 @@ const obtenerClasesDelDiaService = async () => {
   const mananaLocal = new Date(hoyLocal);
   mananaLocal.setDate(hoyLocal.getDate() + 1);
 
-  // 🔍 Buscamos reservas entre 00:00 y 23:59 HORA LOCAL del día actual
+  // 🔍 Busca reservas entre 00:00 y 23:59 del día actual
   const reservasHoy = await Reserva.find({
     fecha: { $gte: hoyLocal, $lt: mananaLocal },
   }).populate("idUsuario", "nombreUsuario");
