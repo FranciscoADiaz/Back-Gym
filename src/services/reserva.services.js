@@ -1,9 +1,12 @@
 const Reserva = require("../models/reserva.model");
 const Usuarios = require("../models/usuarios.model");
 
-
+// ✅ Guarda la reserva con la fecha y hora reales al momento de crear
 const crearReservaService = async (datos) => {
-  const nuevaReserva = new Reserva(datos);
+  const nuevaReserva = new Reserva({
+    ...datos,
+    fecha: new Date(), // ahora mismo
+  });
   return await nuevaReserva.save();
 };
 
@@ -15,20 +18,21 @@ const cancelarReservaService = async (id) => {
   return await Reserva.findByIdAndDelete(id);
 };
 
-
 const obtenerClasesDelDiaService = async () => {
   const ahora = new Date();
 
-  // 🔧 Creamos los rangos usando UTC
-  const hoyUTC = new Date(
-    Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate())
+  // 🔧 Rango para hoy usando hora local (del servidor, UTC-3 si está en Argentina)
+  const hoyLocal = new Date(
+    ahora.getFullYear(),
+    ahora.getMonth(),
+    ahora.getDate()
   );
-  const mananaUTC = new Date(hoyUTC);
-  mananaUTC.setUTCDate(hoyUTC.getUTCDate() + 1);
+  const mananaLocal = new Date(hoyLocal);
+  mananaLocal.setDate(hoyLocal.getDate() + 1);
 
-  // 🔍 Buscamos reservas entre 00:00 y 23:59 UTC del día actual
+  // 🔍 Busca reservas entre 00:00 y 23:59 del día actual
   const reservasHoy = await Reserva.find({
-    fecha: { $gte: hoyUTC, $lt: mananaUTC },
+    fecha: { $gte: hoyLocal, $lt: mananaLocal },
   }).populate("idUsuario", "nombreUsuario");
 
   const clasesAgrupadas = {};
@@ -53,7 +57,6 @@ const obtenerClasesDelDiaService = async () => {
 
   return Object.values(clasesAgrupadas);
 };
-
 
 module.exports = {
   crearReservaService,
