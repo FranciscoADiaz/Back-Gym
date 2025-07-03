@@ -16,7 +16,7 @@ const registroUsuario = async (req, res) => {
 
  catch {
    console.error(error)
-    res.status(statusCode).json({ msg: error.message });
+    res.status(statusCode).json({ error});
 
 }
 }
