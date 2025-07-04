@@ -2,7 +2,7 @@ const transporter = require("./nodemailer.helpers");
 
 const registroExitoso = async (emailUsuario, nombreUsuario) => {
   const info = await transporter.sendMail({
-    from: `"Tucu-Gym" <${process.env.MAILGUN_USER}>`, // ✅ CAMBIADO a MAILGUN_USER
+    from: `"Tucu-Gym" <${process.env.MAILGUN_USER}>`,  // ✅ CAMBIADO a MAILGUN_USER
     to: `${emailUsuario}`,
     subject: `Bienvenido  ${nombreUsuario} ✔`,
     text: "En breve podrás iniciar sesión",
@@ -20,7 +20,7 @@ const registroExitoso = async (emailUsuario, nombreUsuario) => {
 
 const recoveryPassEmail = async (emailUsuario, token) => {
   const info = await transporter.sendMail({
-    from: `"Tucu-Gym" <${process.env.MAILGUN_USER}>`, // ✅ CAMBIADO a MAILGUN_USER
+    from: `"Tucu-Gym" <${process.env.MAILGUN_USER}>`,  // ✅ CAMBIADO a MAILGUN_USER
     to: `${emailUsuario}`,
     subject: `Recuperación de contraseña`,
     html: `
