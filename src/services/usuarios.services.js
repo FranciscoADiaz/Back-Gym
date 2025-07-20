@@ -133,11 +133,41 @@ const obtenerTodosLosUsuariosDb = async () => {
   }
 };
 
+const eliminarUsuarioDb = async (idUsuario) => {
+  try {
+  
+    const usuario = await UsuariosModel.findById(idUsuario);
+
+    if (!usuario) {
+      return {
+        statusCode: 404,
+        msg: "Usuario no encontrado",
+      };
+    }
+
+
+    await UsuariosModel.findByIdAndDelete(idUsuario);
+
+    return {
+      statusCode: 200,
+      msg: "Usuario eliminado exitosamente",
+    };
+  } catch (error) {
+    return {
+      error,
+      statusCode: 500,
+      msg: "Error al eliminar el usuario",
+    };
+  }
+};
+
+
 
 
 module.exports = {
   registroUsuarioDb,
   inicioSesionUsuarioDb,
   habilitarDeshabilitarUsuarioDb,
-  obtenerTodosLosUsuariosDb
+  obtenerTodosLosUsuariosDb,
+  eliminarUsuarioDb,
 };
