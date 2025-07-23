@@ -1,4 +1,5 @@
-const { registroUsuarioDb, inicioSesionUsuarioDb, habilitarDeshabilitarUsuarioDb, obtenerTodosLosUsuariosDb
+const { registroUsuarioDb, inicioSesionUsuarioDb, habilitarDeshabilitarUsuarioDb, obtenerTodosLosUsuariosDb,
+  eliminarUsuarioDb
  } = require("../services/usuarios.services");
 const { validationResult } = require("express-validator");
 
@@ -64,10 +65,28 @@ const obtenerTodosLosUsuarios = async (req, res) => {
 };
 
 
+const eliminarUsuario = async (req, res) => {
+  const errores = validationResult(req);
+  if (!errores.isEmpty()) {
+    return res.status(422).json({ msg: errores.array() });
+  }
+
+  const { msg, statusCode, error } = await eliminarUsuarioDb(req.params.id);
+
+  if (error) {
+    return res.status(statusCode).json({ error });
+  }
+
+  return res.status(statusCode).json({ msg });
+};
+
+
+
 
 module.exports = {
   registroUsuario,
   inicioSesionUsuario,
   habilitarDeshabilitarUsuario,
-  obtenerTodosLosUsuarios
+  obtenerTodosLosUsuarios,
+  eliminarUsuario,
 };

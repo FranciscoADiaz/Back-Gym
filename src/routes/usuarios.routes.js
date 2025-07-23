@@ -1,6 +1,6 @@
 const {Router} = require('express');
 const router = Router();    
-const { registroUsuario, inicioSesionUsuario, habilitarDeshabilitarUsuario, obtenerTodosLosUsuarios } = require("../controllers/usuarios.controllers");
+const { registroUsuario, inicioSesionUsuario, habilitarDeshabilitarUsuario, obtenerTodosLosUsuarios, eliminarUsuario } = require("../controllers/usuarios.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require('express-validator');
 
@@ -52,6 +52,10 @@ router.put("/enableDisable/:id",
 
   router.get("/", obtenerTodosLosUsuarios);
   
+  router.delete("/:id",
+    [check("id", "❌ ERROR ID: El formato de ID no corresponde a MongoDB").isMongoId(),
+    ], auth("admin"), eliminarUsuario);
+
 
 module.exports = router;
 
