@@ -46,6 +46,15 @@ const UsuariosSchema = new Schema({
   idFavoritos: {
     type: String,
   },
+  telefono: {
+    type: String,
+    trim: true,
+    default: "",
+  },
+  plan: {
+    type: String,
+    default: "Sin plan",
+  },
 });
 
 //toJSON
