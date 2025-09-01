@@ -6,6 +6,7 @@ const { check } = require("express-validator");
 const {
   crearReserva,
   obtenerReservas,
+  obtenerReservasUsuario,
   cancelarReserva,
   verificarCupos,
   obtenerReservasPorFecha,
@@ -19,6 +20,9 @@ router.post("/", crearReserva);
 
 // GET - Obtener todas las reservas (para admin) o reservas del usuario
 router.get("/", obtenerReservas);
+
+// GET - Obtener reservas de un usuario específico
+router.get("/usuario/:idUsuario", auth("usuario"), obtenerReservasUsuario);
 
 // GET - Verificar cupos disponibles
 router.get("/cupos", verificarCupos);

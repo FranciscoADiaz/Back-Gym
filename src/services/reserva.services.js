@@ -101,6 +101,98 @@ const obtenerClasesDelDiaService = async () => {
   return Object.values(clasesAgrupadas);
 };
 
+const obtenerClasesProximosDiasService = async (dias = 7) => {
+  const ahora = new Date();
+  const hoyLocal = new Date(
+    ahora.getFullYear(),
+    ahora.getMonth(),
+    ahora.getDate()
+  );
+
+  // Calcular fecha límite (hoy + días especificados)
+  const fechaLimite = new Date(hoyLocal);
+  fechaLimite.setDate(hoyLocal.getDate() + dias);
+
+  // Obtener reservas de los próximos días (excluyendo hoy)
+  const mananaLocal = new Date(hoyLocal);
+  mananaLocal.setDate(hoyLocal.getDate() + 1);
+
+  const reservasProximosDias = await Reserva.find({
+    fecha: { $gte: mananaLocal, $lt: fechaLimite },
+    estado: "activa",
+  }).populate("idUsuario", "nombreUsuario");
+
+  // Agrupar por fecha y clase
+  const clasesAgrupadas = {};
+
+  reservasProximosDias.forEach((reserva) => {
+    const fecha = reserva.fecha;
+    const key = `${fecha}-${reserva.tipoClase}-${reserva.profesor}-${reserva.hora}`;
+
+    if (!clasesAgrupadas[key]) {
+      clasesAgrupadas[key] = {
+        fecha: fecha,
+        tipoClase: reserva.tipoClase,
+        profesor: reserva.profesor,
+        hora: reserva.hora,
+        usuarios: [],
+      };
+    }
+
+    clasesAgrupadas[key].usuarios.push({
+      nombreUsuario: reserva.idUsuario?.nombreUsuario || "Sin nombre",
+    });
+  });
+
+  // Convertir a array y ordenar por fecha
+  const clasesArray = Object.values(clasesAgrupadas);
+  clasesArray.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+  return clasesArray;
+};
+
+const obtenerTodasLasReservasAdminService = async () => {
+  try {
+    // Obtener todas las reservas activas ordenadas por fecha
+    const todasLasReservas = await Reserva.find({ estado: "activa" })
+      .populate("idUsuario", "nombreUsuario emailUsuario")
+      .sort({ fecha: 1, hora: 1 });
+
+    // Agrupar por fecha y clase
+    const reservasAgrupadas = {};
+
+    todasLasReservas.forEach((reserva) => {
+      const fecha = reserva.fecha;
+      const key = `${fecha}-${reserva.tipoClase}-${reserva.profesor}-${reserva.hora}`;
+
+      if (!reservasAgrupadas[key]) {
+        reservasAgrupadas[key] = {
+          fecha: fecha,
+          tipoClase: reserva.tipoClase,
+          profesor: reserva.profesor,
+          hora: reserva.hora,
+          usuarios: [],
+        };
+      }
+
+      reservasAgrupadas[key].usuarios.push({
+        nombreUsuario: reserva.idUsuario?.nombreUsuario || "Sin nombre",
+        emailUsuario: reserva.idUsuario?.emailUsuario || "Sin email",
+        idUsuario: reserva.idUsuario?._id || reserva.idUsuario,
+      });
+    });
+
+    // Convertir a array y ordenar por fecha
+    const reservasArray = Object.values(reservasAgrupadas);
+    reservasArray.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    return reservasArray;
+  } catch (error) {
+    console.error("Error en obtenerTodasLasReservasAdminService:", error);
+    throw error;
+  }
+};
+
 const verificarCuposService = async (
   fecha,
   hora,
@@ -165,6 +257,8 @@ module.exports = {
   obtenerReservasService,
   cancelarReservaService,
   obtenerClasesDelDiaService,
+  obtenerClasesProximosDiasService,
+  obtenerTodasLasReservasAdminService,
   verificarCuposService,
   obtenerReservasPorFechaService,
 };

@@ -8,6 +8,7 @@ const {
   actualizarUsuarioDb,
   migrarContraseniasDb,
   asignarPlanUsuarioDb,
+  verificarPlanActivoDb,
 } = require("../services/usuarios.services");
 const { validationResult } = require("express-validator");
 
@@ -164,6 +165,82 @@ const asignarPlanUsuario = async (req, res) => {
   }
 };
 
+const listarPlanesContratados = async (req, res) => {
+  try {
+    const PlanContratadoModel = require("../models/planContratado.model");
+    const planes = await PlanContratadoModel.find().populate(
+      "idUsuario",
+      "nombreUsuario emailUsuario"
+    );
+
+    res.status(200).json({
+      success: true,
+      planes: planes,
+      total: planes.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      msg: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+const crearPlanPrueba = async (req, res) => {
+  try {
+    const { idUsuario } = req.params;
+
+    const PlanContratadoModel = require("../models/planContratado.model");
+
+    const fechaVencimiento = new Date();
+    fechaVencimiento.setMonth(fechaVencimiento.getMonth() + 6);
+
+    const planPrueba = await PlanContratadoModel.create({
+      idUsuario: idUsuario,
+      plan: "Completo",
+      duracion: 6,
+      precio: 30000,
+      fechaInicio: new Date(),
+      fechaVencimiento: fechaVencimiento,
+      estado: "activo",
+    });
+
+    res.status(200).json({
+      success: true,
+      msg: "Plan de prueba creado exitosamente",
+      plan: planPrueba,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      msg: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+const verificarPlanActivo = async (req, res) => {
+  try {
+    const { idUsuario } = req.params;
+
+    const { msg, statusCode, error, planActivo, plan, fechaVencimiento } =
+      await verificarPlanActivoDb(idUsuario);
+
+    res.status(statusCode).json({
+      msg,
+      planActivo,
+      plan,
+      fechaVencimiento,
+    });
+  } catch (error) {
+    res.status(500).json({
+      msg: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   registroUsuario,
   inicioSesionUsuario,
@@ -175,4 +252,7 @@ module.exports = {
   obtenerUsuarioPorId,
   migrarContrasenias,
   asignarPlanUsuario,
+  verificarPlanActivo,
+  listarPlanesContratados,
+  crearPlanPrueba,
 };

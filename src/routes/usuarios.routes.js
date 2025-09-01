@@ -11,6 +11,9 @@ const {
   obtenerUsuarioPorId,
   migrarContrasenias,
   asignarPlanUsuario,
+  verificarPlanActivo,
+  listarPlanesContratados,
+  crearPlanPrueba,
 } = require("../controllers/usuarios.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
@@ -95,6 +98,15 @@ router.post(
 
 // RUTA PARA OBTENER TODOS LOS USUARIOS (solo admin)
 router.get("/", auth("admin"), obtenerTodosLosUsuarios);
+
+// RUTA PARA VERIFICAR PLAN ACTIVO (usuario común puede verificar su propio plan)
+router.get("/:idUsuario/plan-activo", verificarPlanActivo);
+
+// RUTA TEMPORAL PARA LISTAR TODOS LOS PLANES CONTRATADOS (solo admin)
+router.get("/planes-contratados", auth("admin"), listarPlanesContratados);
+
+// RUTA TEMPORAL PARA CREAR PLAN DE PRUEBA
+router.post("/:idUsuario/crear-plan-prueba", crearPlanPrueba);
 
 // RUTA PARA OBTENER USUARIO POR ID (solo admin)
 router.get(

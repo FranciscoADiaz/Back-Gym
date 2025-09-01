@@ -91,13 +91,6 @@ const procesarWebhookDb = async (body) => {
             plan: plan,
             fechaVencimiento: fechaVencimiento,
           });
-
-          console.log("Pago aprobado y plan activado:", {
-            userId,
-            paymentId: payment.id,
-            amount: payment.transaction_amount,
-            plan: plan,
-          });
         }
       }
     }
@@ -107,7 +100,6 @@ const procesarWebhookDb = async (body) => {
       statusCode: 200,
     };
   } catch (error) {
-    console.error("Error en webhook:", error);
     return {
       success: false,
       msg: "Error procesando webhook",
@@ -131,7 +123,6 @@ const verificarPagoDb = async (paymentId) => {
       statusCode: 200,
     };
   } catch (error) {
-    console.error("Error al verificar pago:", error);
     return {
       success: false,
       msg: "Error al verificar el pago",

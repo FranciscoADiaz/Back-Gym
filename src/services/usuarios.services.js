@@ -120,8 +120,34 @@ const obtenerTodosLosUsuariosDb = async () => {
   try {
     const usuarios = await UsuariosModel.find();
 
+    // Verificar planes activos para cada usuario
+    const PlanContratadoModel = require("../models/planContratado.model");
+
+    const usuariosConPlanes = await Promise.all(
+      usuarios.map(async (usuario) => {
+        // Buscar plan activo en planContratado
+        const planActivo = await PlanContratadoModel.findOne({
+          idUsuario: usuario._id,
+          estado: "activo",
+          fechaVencimiento: { $gt: new Date() },
+        }).sort({ fechaVencimiento: -1 });
+
+        // Si tiene plan activo, usar ese plan. Si no, usar el plan del usuario o "Sin plan"
+        const planUsuario = planActivo
+          ? planActivo.plan
+          : usuario.plan || "Sin plan";
+
+        return {
+          ...usuario.toObject(),
+          plan: planUsuario,
+          planActivo: !!planActivo,
+          fechaVencimientoPlan: planActivo ? planActivo.fechaVencimiento : null,
+        };
+      })
+    );
+
     return {
-      usuarios,
+      usuarios: usuariosConPlanes,
       statusCode: 200,
     };
   } catch (error) {
@@ -201,40 +227,30 @@ const crearUsuarioDb = async (body) => {
 
 const actualizarUsuarioDb = async (idUsuario, body) => {
   try {
-    console.log("Datos recibidos en actualizarUsuarioDb:", { idUsuario, body });
-
     const { nombreUsuario, emailUsuario, contrasenia, rol, telefono, plan } =
       body;
 
-    // Validar campos requeridos
     if (!nombreUsuario || !emailUsuario || !rol) {
-      console.log("Campos requeridos faltantes");
       return {
         statusCode: 400,
         msg: "Nombre de usuario, email y rol son campos requeridos",
       };
     }
 
-    // Buscar usuario
     const usuario = await UsuariosModel.findById(idUsuario);
     if (!usuario) {
-      console.log("Usuario no encontrado:", idUsuario);
       return {
         statusCode: 404,
         msg: "Usuario no encontrado",
       };
     }
 
-    console.log("Usuario encontrado:", usuario.nombreUsuario);
-
-    // Validar que el email no esté en uso por otro usuario
     if (emailUsuario !== usuario.emailUsuario) {
       const emailEnUso = await UsuariosModel.findOne({
         emailUsuario,
         _id: { $ne: idUsuario },
       });
       if (emailEnUso) {
-        console.log("Email ya en uso");
         return {
           statusCode: 400,
           msg: "El email ya está en uso",
@@ -242,14 +258,12 @@ const actualizarUsuarioDb = async (idUsuario, body) => {
       }
     }
 
-    // Validar que el nombre de usuario no esté en uso por otro usuario
     if (nombreUsuario !== usuario.nombreUsuario) {
       const nombreEnUso = await UsuariosModel.findOne({
         nombreUsuario,
         _id: { $ne: idUsuario },
       });
       if (nombreEnUso) {
-        console.log("Nombre de usuario ya en uso");
         return {
           statusCode: 400,
           msg: "El nombre de usuario ya está en uso",
@@ -257,29 +271,23 @@ const actualizarUsuarioDb = async (idUsuario, body) => {
       }
     }
 
-    // Actualizar campos
     usuario.nombreUsuario = nombreUsuario;
     usuario.emailUsuario = emailUsuario;
     usuario.rol = rol;
     usuario.telefono = telefono || "";
     usuario.plan = plan || "Sin plan";
 
-    // Solo actualizar contraseña si se proporciona
     if (contrasenia && contrasenia.trim() !== "") {
-      console.log("Actualizando contraseña");
       usuario.contrasenia = await argon.hash(contrasenia);
     }
 
-    console.log("Guardando usuario...");
     await usuario.save();
-    console.log("Usuario guardado exitosamente");
 
     return {
       statusCode: 200,
       msg: "Usuario actualizado exitosamente",
     };
   } catch (error) {
-    console.error("Error al actualizar usuario:", error);
     return {
       error: error.message,
       statusCode: 500,
@@ -299,8 +307,27 @@ const obtenerUsuarioPorIdDb = async (idUsuario) => {
         msg: "Usuario no encontrado",
       };
     }
+
+    // Verificar si el usuario tiene un plan activo
+    const PlanContratadoModel = require("../models/planContratado.model");
+    const planActivo = await PlanContratadoModel.findOne({
+      idUsuario: idUsuario,
+      estado: "activo",
+      fechaVencimiento: { $gt: new Date() },
+    }).sort({ fechaVencimiento: -1 });
+
+    // Si tiene plan activo, usar ese plan. Si no, usar el plan del usuario o "Sin plan"
+    const planUsuario = planActivo
+      ? planActivo.plan
+      : usuario.plan || "Sin plan";
+
     return {
-      usuario,
+      usuario: {
+        ...usuario.toObject(),
+        plan: planUsuario,
+        planActivo: !!planActivo,
+        fechaVencimientoPlan: planActivo ? planActivo.fechaVencimiento : null,
+      },
       statusCode: 200,
     };
   } catch (error) {
@@ -356,7 +383,6 @@ const asignarPlanUsuarioDb = async (idUsuario, planData) => {
   try {
     const { plan, duracion, precio } = planData;
 
-    // Buscar usuario
     const usuario = await UsuariosModel.findById(idUsuario);
     if (!usuario) {
       return {
@@ -365,19 +391,20 @@ const asignarPlanUsuarioDb = async (idUsuario, planData) => {
       };
     }
 
-    // Calcular fecha de vencimiento
     const fechaVencimiento = new Date();
     fechaVencimiento.setMonth(fechaVencimiento.getMonth() + parseInt(duracion));
 
-    // Actualizar usuario con el nuevo plan
-    await UsuariosModel.findByIdAndUpdate(idUsuario, {
-      plan: plan,
-      fechaVencimiento: fechaVencimiento,
-    });
+    const usuarioActualizado = await UsuariosModel.findByIdAndUpdate(
+      idUsuario,
+      {
+        plan: plan,
+        fechaVencimiento: fechaVencimiento,
+      },
+      { new: true }
+    );
 
-    // Crear registro en planContratado
     const PlanContratadoModel = require("../models/planContratado.model");
-    await PlanContratadoModel.create({
+    const planContratado = await PlanContratadoModel.create({
       idUsuario: idUsuario,
       plan: plan,
       duracion: parseInt(duracion),
@@ -389,7 +416,42 @@ const asignarPlanUsuarioDb = async (idUsuario, planData) => {
 
     return {
       statusCode: 200,
-      msg: `Plan ${plan} asignado exitosamente al usuario`,
+      msg: `Plan ${plan} asignado exitosamente al usuario ${usuario.nombreUsuario}`,
+    };
+  } catch (error) {
+    return {
+      error,
+      statusCode: 500,
+      msg: "Error interno del servidor",
+    };
+  }
+};
+
+const verificarPlanActivoDb = async (idUsuario) => {
+  try {
+    const PlanContratadoModel = require("../models/planContratado.model");
+
+    const planActivo = await PlanContratadoModel.findOne({
+      idUsuario: idUsuario,
+      estado: "activo",
+      fechaVencimiento: { $gt: new Date() },
+    }).sort({ fechaVencimiento: -1 });
+
+    if (!planActivo) {
+      return {
+        statusCode: 404,
+        msg: "No tienes un plan activo",
+        planActivo: false,
+        plan: null,
+      };
+    }
+
+    return {
+      statusCode: 200,
+      msg: "Plan activo encontrado",
+      planActivo: true,
+      plan: planActivo.plan,
+      fechaVencimiento: planActivo.fechaVencimiento,
     };
   } catch (error) {
     return {
@@ -411,4 +473,5 @@ module.exports = {
   obtenerUsuarioPorIdDb,
   migrarContraseniasDb,
   asignarPlanUsuarioDb,
+  verificarPlanActivoDb,
 };

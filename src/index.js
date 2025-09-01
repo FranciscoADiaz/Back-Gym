@@ -37,9 +37,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 // Iniciar servidor
-app.listen(puerto, () => {
-  console.log("Servidor funcionando en el puerto", puerto);
-});
+app.listen(puerto, () => {});
 
 //Rutas
 app.use("/api", require("./routes/index.routes"));
