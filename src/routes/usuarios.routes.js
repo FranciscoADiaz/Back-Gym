@@ -8,6 +8,9 @@ const {
   eliminarUsuario,
   crearUsuario,
   actualizarUsuario,
+  obtenerUsuarioPorId,
+  migrarContrasenias,
+  asignarPlanUsuario,
 } = require("../controllers/usuarios.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
@@ -68,7 +71,46 @@ router.put(
   habilitarDeshabilitarUsuario
 );
 
-router.get("/", obtenerTodosLosUsuarios);
+// RUTA PARA CREAR USUARIOS (solo admin)
+router.post("/crear", auth("admin"), crearUsuario);
+
+// RUTA PARA MIGRAR CONTRASEÑAS A ARGON2 (solo admin)
+router.post("/migrar-contrasenias", auth("admin"), migrarContrasenias);
+
+// RUTA PARA ASIGNAR PLAN A USUARIO (solo admin)
+router.post(
+  "/:id/asignar-plan",
+  [
+    check("plan", "El plan es requerido").notEmpty(),
+    check("duracion", "La duración es requerida").isNumeric(),
+    check("precio", "El precio es requerido").isNumeric(),
+    check(
+      "id",
+      "❌ ERROR ID: El formato de ID no corresponde a MongoDB"
+    ).isMongoId(),
+  ],
+  auth("admin"),
+  asignarPlanUsuario
+);
+
+// RUTA PARA OBTENER TODOS LOS USUARIOS (solo admin)
+router.get("/", auth("admin"), obtenerTodosLosUsuarios);
+
+// RUTA PARA OBTENER USUARIO POR ID (solo admin)
+router.get(
+  "/:id",
+  [
+    check(
+      "id",
+      "❌ ERROR ID: El formato de ID no corresponde a MongoDB"
+    ).isMongoId(),
+  ],
+  auth("admin"),
+  obtenerUsuarioPorId
+);
+
+// RUTA PARA ACTUALIZAR USUARIOS (solo admin)
+router.put("/:id", auth("admin"), actualizarUsuario);
 
 router.delete(
   "/:id",
@@ -80,22 +122,6 @@ router.delete(
   ],
   auth("admin"),
   eliminarUsuario
-);
-
-// RUTA PARA CREAR USUARIOS (solo admin)
-router.post("/crear", auth("admin"), crearUsuario);
-
-// RUTA PARA ACTUALIZAR USUARIOS (solo admin)
-router.put(
-  "/:id",
-  [
-    check(
-      "id",
-      "❌ ERROR ID: El formato de ID no corresponde a MongoDB"
-    ).isMongoId(),
-  ],
-  auth("admin"),
-  actualizarUsuario
 );
 
 module.exports = router;

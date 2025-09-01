@@ -27,55 +27,65 @@ const registroUsuarioDb = async (body) => {
 
 const inicioSesionUsuarioDb = async (body) => {
   try {
-    const usuarioExiste = await UsuariosModel.findOne({
-      nombreUsuario: body.nombreUsuario,
-    });
+    const { nombreUsuario, contrasenia } = body;
 
-    if (!usuarioExiste) {
+    // Buscar usuario
+    const usuario = await UsuariosModel.findOne({ nombreUsuario });
+
+    if (!usuario) {
       return {
         statusCode: 400,
-        msg: "Usuario no encontrado.",
+        msg: "Usuario no encontrado",
       };
     }
 
-    if (usuarioExiste.estado === "deshabilitado") {
-      return {
-        statusCode: 400,
-        msg: "Usuario DESHABILITADO, por favor contacte al administrador.",
-      };
-    }
-
-    const confirmarContrasenia = await argon.verify(
-      usuarioExiste.contrasenia,
-      body.contrasenia
+    // Verificar contraseña con Argon2
+    const contraseniaValida = await argon.verify(
+      usuario.contrasenia,
+      contrasenia
     );
 
-    if (confirmarContrasenia) {
-      const payload = {
-        idUsuario: usuarioExiste._id,
-        nombreUsuario: usuarioExiste.nombreUsuario,
-        rolUsuario: usuarioExiste.rol,
-        estadoUsuario: usuarioExiste.estado,
-      };
-
-      const token = jwt.sign(payload, process.env.JWT_SECRET);
-
+    if (!contraseniaValida) {
       return {
-        msg: "Inicio de sesión exitoso",
-        token,
-        rolUsuario: usuarioExiste.rol,
-        statusCode: 200,
-      };
-    } else {
-      return {
-        statusCode: 200,
-        msg: "Usuario y/o contraseña no coinciden",
+        statusCode: 400,
+        msg: "Contraseña incorrecta",
       };
     }
+
+    // Verificar estado
+    if (usuario.estado !== "habilitado") {
+      return {
+        statusCode: 400,
+        msg: "Usuario deshabilitado",
+      };
+    }
+
+    // Generar token JWT con MÁS información
+    const payload = {
+      idUsuario: usuario._id,
+      nombreUsuario: usuario.nombreUsuario,
+      emailUsuario: usuario.emailUsuario, // ← AGREGAR ESTA LÍNEA
+      rolUsuario: usuario.rol,
+      estadoUsuario: usuario.estado,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+
+    return {
+      success: true,
+      msg: "Inicio de sesión exitoso",
+      token,
+      rolUsuario: usuario.rol,
+      statusCode: 200,
+    };
   } catch (error) {
+    console.error("Error en login:", error);
     return {
       error,
       statusCode: 500,
+      msg: "Error interno del servidor",
     };
   }
 };
@@ -169,7 +179,7 @@ const crearUsuarioDb = async (body) => {
     const nuevoUsuario = new UsuariosModel({
       nombreUsuario,
       emailUsuario,
-      contrasenia: await argon.hash(contrasenia, 10),
+      contrasenia: await argon.hash(contrasenia),
       rol,
       telefono: telefono || "",
       plan: plan || "Sin plan",
@@ -191,17 +201,31 @@ const crearUsuarioDb = async (body) => {
 
 const actualizarUsuarioDb = async (idUsuario, body) => {
   try {
+    console.log("Datos recibidos en actualizarUsuarioDb:", { idUsuario, body });
+
     const { nombreUsuario, emailUsuario, contrasenia, rol, telefono, plan } =
       body;
+
+    // Validar campos requeridos
+    if (!nombreUsuario || !emailUsuario || !rol) {
+      console.log("Campos requeridos faltantes");
+      return {
+        statusCode: 400,
+        msg: "Nombre de usuario, email y rol son campos requeridos",
+      };
+    }
 
     // Buscar usuario
     const usuario = await UsuariosModel.findById(idUsuario);
     if (!usuario) {
+      console.log("Usuario no encontrado:", idUsuario);
       return {
         statusCode: 404,
         msg: "Usuario no encontrado",
       };
     }
+
+    console.log("Usuario encontrado:", usuario.nombreUsuario);
 
     // Validar que el email no esté en uso por otro usuario
     if (emailUsuario !== usuario.emailUsuario) {
@@ -210,9 +234,25 @@ const actualizarUsuarioDb = async (idUsuario, body) => {
         _id: { $ne: idUsuario },
       });
       if (emailEnUso) {
+        console.log("Email ya en uso");
         return {
           statusCode: 400,
           msg: "El email ya está en uso",
+        };
+      }
+    }
+
+    // Validar que el nombre de usuario no esté en uso por otro usuario
+    if (nombreUsuario !== usuario.nombreUsuario) {
+      const nombreEnUso = await UsuariosModel.findOne({
+        nombreUsuario,
+        _id: { $ne: idUsuario },
+      });
+      if (nombreEnUso) {
+        console.log("Nombre de usuario ya en uso");
+        return {
+          statusCode: 400,
+          msg: "El nombre de usuario ya está en uso",
         };
       }
     }
@@ -226,13 +266,130 @@ const actualizarUsuarioDb = async (idUsuario, body) => {
 
     // Solo actualizar contraseña si se proporciona
     if (contrasenia && contrasenia.trim() !== "") {
-      usuario.contrasenia = await argon.hash(contrasenia, 10);
+      console.log("Actualizando contraseña");
+      usuario.contrasenia = await argon.hash(contrasenia);
     }
 
+    console.log("Guardando usuario...");
     await usuario.save();
+    console.log("Usuario guardado exitosamente");
+
     return {
       statusCode: 200,
       msg: "Usuario actualizado exitosamente",
+    };
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    return {
+      error: error.message,
+      statusCode: 500,
+      msg: "Error interno del servidor",
+    };
+  }
+};
+
+const obtenerUsuarioPorIdDb = async (idUsuario) => {
+  try {
+    const usuario = await UsuariosModel.findById(idUsuario).select(
+      "-contrasenia"
+    );
+    if (!usuario) {
+      return {
+        statusCode: 404,
+        msg: "Usuario no encontrado",
+      };
+    }
+    return {
+      usuario,
+      statusCode: 200,
+    };
+  } catch (error) {
+    return {
+      error,
+      statusCode: 500,
+      msg: "Error interno del servidor",
+    };
+  }
+};
+
+// Función para migrar contraseñas de bcrypt a Argon2
+const migrarContraseniasDb = async () => {
+  try {
+    const bcrypt = require("bcrypt");
+    const usuarios = await UsuariosModel.find();
+    let migrados = 0;
+
+    for (const usuario of usuarios) {
+      // Si la contraseña empieza con $2, es bcrypt
+      if (usuario.contrasenia.startsWith("$2")) {
+        console.log(
+          `Migrando contraseña para usuario: ${usuario.nombreUsuario}`
+        );
+
+        // Generar una nueva contraseña temporal
+        const nuevaContrasenia = "temp123456"; // Contraseña temporal
+        usuario.contrasenia = await argon.hash(nuevaContrasenia);
+        await usuario.save();
+        migrados++;
+
+        console.log(
+          `Usuario ${usuario.nombreUsuario} migrado. Nueva contraseña temporal: ${nuevaContrasenia}`
+        );
+      }
+    }
+
+    return {
+      statusCode: 200,
+      msg: `Migración completada. ${migrados} usuarios migrados a Argon2`,
+      usuariosMigrados: migrados,
+    };
+  } catch (error) {
+    return {
+      error,
+      statusCode: 500,
+      msg: "Error en la migración",
+    };
+  }
+};
+
+const asignarPlanUsuarioDb = async (idUsuario, planData) => {
+  try {
+    const { plan, duracion, precio } = planData;
+
+    // Buscar usuario
+    const usuario = await UsuariosModel.findById(idUsuario);
+    if (!usuario) {
+      return {
+        statusCode: 404,
+        msg: "Usuario no encontrado",
+      };
+    }
+
+    // Calcular fecha de vencimiento
+    const fechaVencimiento = new Date();
+    fechaVencimiento.setMonth(fechaVencimiento.getMonth() + parseInt(duracion));
+
+    // Actualizar usuario con el nuevo plan
+    await UsuariosModel.findByIdAndUpdate(idUsuario, {
+      plan: plan,
+      fechaVencimiento: fechaVencimiento,
+    });
+
+    // Crear registro en planContratado
+    const PlanContratadoModel = require("../models/planContratado.model");
+    await PlanContratadoModel.create({
+      idUsuario: idUsuario,
+      plan: plan,
+      duracion: parseInt(duracion),
+      precio: precio,
+      fechaInicio: new Date(),
+      fechaVencimiento: fechaVencimiento,
+      estado: "activo",
+    });
+
+    return {
+      statusCode: 200,
+      msg: `Plan ${plan} asignado exitosamente al usuario`,
     };
   } catch (error) {
     return {
@@ -251,4 +408,7 @@ module.exports = {
   eliminarUsuarioDb,
   crearUsuarioDb,
   actualizarUsuarioDb,
+  obtenerUsuarioPorIdDb,
+  migrarContraseniasDb,
+  asignarPlanUsuarioDb,
 };

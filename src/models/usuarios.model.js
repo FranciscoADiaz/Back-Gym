@@ -34,7 +34,7 @@ const UsuariosSchema = new Schema({
   estado: {
     type: String,
     enum: ["habilitado", "deshabilitado"],
-    default: "deshabilitado",
+    default: "habilitado",
   },
   fechaReg: {
     type: Date,
@@ -53,7 +53,19 @@ const UsuariosSchema = new Schema({
   },
   plan: {
     type: String,
+    enum: [
+      "Sin plan",
+      "Musculación",
+      "Spinning",
+      "Funcional",
+      "Crossfit",
+      "Completo",
+    ],
     default: "Sin plan",
+  },
+  fechaVencimiento: {
+    type: Date,
+    default: null,
   },
 });
 

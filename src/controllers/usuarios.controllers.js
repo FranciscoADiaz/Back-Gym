@@ -6,6 +6,8 @@ const {
   eliminarUsuarioDb,
   crearUsuarioDb,
   actualizarUsuarioDb,
+  migrarContraseniasDb,
+  asignarPlanUsuarioDb,
 } = require("../services/usuarios.services");
 const { validationResult } = require("express-validator");
 
@@ -30,12 +32,20 @@ const inicioSesionUsuario = async (req, res) => {
     return res.status(422).json({ msg: respuesta.array() });
   }
 
-  const { msg, statusCode, token, error, rolUsuario } =
+  const { success, msg, statusCode, token, error, rolUsuario } =
     await inicioSesionUsuarioDb(req.body);
   try {
-    res.status(statusCode).json({ msg, token, rolUsuario });
+    res.status(statusCode).json({
+      success: success || false,
+      msg,
+      token,
+      rolUsuario,
+    });
   } catch {
-    res.status(statusCode).json({ error });
+    res.status(statusCode).json({
+      success: false,
+      error,
+    });
   }
 };
 
@@ -89,7 +99,61 @@ const crearUsuario = async (req, res) => {
 };
 
 const actualizarUsuario = async (req, res) => {
-  const { msg, statusCode, error } = await actualizarUsuarioDb(
+  try {
+    const { msg, statusCode, error } = await actualizarUsuarioDb(
+      req.params.id,
+      req.body
+    );
+
+    if (error) {
+      console.error("Error en actualizarUsuario:", error);
+      return res.status(statusCode).json({
+        msg: "Error al actualizar usuario",
+        error: error,
+      });
+    }
+
+    res.status(statusCode).json({ msg });
+  } catch (error) {
+    console.error("Error inesperado en actualizarUsuario:", error);
+    res.status(500).json({
+      msg: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+const obtenerUsuarioPorId = async (req, res) => {
+  const { usuario, statusCode, error } = await obtenerUsuarioPorIdDb(
+    req.params.id
+  );
+  try {
+    res.status(statusCode).json({ usuario });
+  } catch {
+    res.status(statusCode).json({ error });
+  }
+};
+
+const migrarContrasenias = async (req, res) => {
+  const { msg, statusCode, error, usuariosMigrados } =
+    await migrarContraseniasDb();
+  try {
+    res.status(statusCode).json({
+      msg,
+      usuariosMigrados: usuariosMigrados || 0,
+    });
+  } catch {
+    res.status(statusCode).json({ error });
+  }
+};
+
+const asignarPlanUsuario = async (req, res) => {
+  const respuesta = validationResult(req);
+  if (!respuesta.isEmpty()) {
+    return res.status(422).json({ msg: respuesta.array() });
+  }
+
+  const { msg, statusCode, error } = await asignarPlanUsuarioDb(
     req.params.id,
     req.body
   );
@@ -108,4 +172,7 @@ module.exports = {
   eliminarUsuario,
   crearUsuario,
   actualizarUsuario,
+  obtenerUsuarioPorId,
+  migrarContrasenias,
+  asignarPlanUsuario,
 };

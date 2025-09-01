@@ -14,6 +14,8 @@ module.exports = (rolRuta) => async (req, res, next) => {
       req.idUsuario = verificarToken.idUsuario;
       req.idCarrito = verificarToken.idCarrito;
       req.idFavoritos = verificarToken.idFavoritos;
+      req.usuario = verificarToken; // Agregar para compatibilidad
+      req.emailUsuario = verificarToken.emailUsuario; // Agregar email
       next();
     } else {
       res.status(401).json({
