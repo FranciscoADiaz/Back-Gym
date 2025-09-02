@@ -81,7 +81,6 @@ const inicioSesionUsuarioDb = async (body) => {
       statusCode: 200,
     };
   } catch (error) {
-    console.error("Error en login:", error);
     return {
       error,
       statusCode: 500,
@@ -339,7 +338,6 @@ const obtenerUsuarioPorIdDb = async (idUsuario) => {
   }
 };
 
-// Función para migrar contraseñas de bcrypt a Argon2
 const migrarContraseniasDb = async () => {
   try {
     const bcrypt = require("bcrypt");
@@ -347,21 +345,11 @@ const migrarContraseniasDb = async () => {
     let migrados = 0;
 
     for (const usuario of usuarios) {
-      // Si la contraseña empieza con $2, es bcrypt
       if (usuario.contrasenia.startsWith("$2")) {
-        console.log(
-          `Migrando contraseña para usuario: ${usuario.nombreUsuario}`
-        );
-
-        // Generar una nueva contraseña temporal
-        const nuevaContrasenia = "temp123456"; // Contraseña temporal
+        const nuevaContrasenia = "temp123456";
         usuario.contrasenia = await argon.hash(nuevaContrasenia);
         await usuario.save();
         migrados++;
-
-        console.log(
-          `Usuario ${usuario.nombreUsuario} migrado. Nueva contraseña temporal: ${nuevaContrasenia}`
-        );
       }
     }
 

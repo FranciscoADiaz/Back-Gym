@@ -1,13 +1,11 @@
 const express = require("express");
 const cors = require("cors");
-require("./db/config.db.js");
+require(__dirname + "/db/config.db.js");
 
 const morgan = require("morgan");
 
 const app = express();
 const puerto = process.env.PORT || 3005;
-
-// Middlewares
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -38,10 +36,8 @@ app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Iniciar servidor
 app.listen(puerto, () => {});
 
-//Rutas
 app.use("/api", require("./routes/index.routes"));
 
 module.exports = app;
