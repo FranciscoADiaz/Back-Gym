@@ -4,39 +4,26 @@ const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
 
 const {
-  contratarPlan,
-  renovarPlan,
-  cancelarPlan,
-} = require("../controllers/planes.controllers");
+  obtenerTodosLosPlanes,
+  obtenerPlanPorId,
+  obtenerPlanesPorTipo,
+  crearPlan,
+  actualizarPlan,
+  eliminarPlan,
+  cambiarEstadoPlan,
+  buscarPlanes,
+} = require("../controllers/planes.controllers.js");
 
-// POST - Contratar plan
-router.post("/contratar", auth("usuario"), contratarPlan);
+// Rutas para obtener planes
+router.get("/", obtenerTodosLosPlanes);
+router.get("/buscar", buscarPlanes);
+router.get("/tipo/:tipo", obtenerPlanesPorTipo);
+router.get("/:id", obtenerPlanPorId);
 
-// PUT - Renovar plan
-router.put(
-  "/:id/renovar",
-  [
-    check(
-      "id",
-      "❌ ERROR ID: El formato de ID no corresponde a MongoDB"
-    ).isMongoId(),
-  ],
-  auth("usuario"),
-  renovarPlan
-);
-
-// PUT - Cancelar plan
-router.put(
-  "/:id/cancelar",
-  [
-    check(
-      "id",
-      "❌ ERROR ID: El formato de ID no corresponde a MongoDB"
-    ).isMongoId(),
-  ],
-  auth("usuario"),
-  cancelarPlan
-);
+// Rutas para crear y modificar planes
+router.post("/", crearPlan);
+router.put("/:id", actualizarPlan);
+router.delete("/:id", eliminarPlan);
+router.patch("/:id/estado", cambiarEstadoPlan);
 
 module.exports = router;
-

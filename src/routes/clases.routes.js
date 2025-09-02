@@ -5,7 +5,6 @@ const {
   obtenerTodasLasClases,
   obtenerClasePorId,
   obtenerClasesPorTipo,
-  obtenerClasesPorProfesor,
   crearClase,
   actualizarClase,
   eliminarClase,
@@ -17,7 +16,6 @@ const {
 router.get("/", obtenerTodasLasClases);
 router.get("/buscar", buscarClases);
 router.get("/tipo/:tipoClase", obtenerClasesPorTipo);
-router.get("/profesor/:profesor", obtenerClasesPorProfesor);
 router.get("/:id", obtenerClasePorId);
 
 // Rutas para crear y modificar clases

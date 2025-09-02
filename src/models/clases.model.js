@@ -13,12 +13,7 @@ const ClaseSchema = new mongoose.Schema({
   },
   tipoClase: {
     type: String,
-    enum: ["Spinning", "Funcional", "Crossfit", "Yoga", "Pilates", "Zumba"],
-    required: true,
-  },
-  profesor: {
-    type: String,
-    enum: ["andres", "walter", "daniela", "maria", "carlos"],
+    enum: ["Spinning", "Funcional", "Crossfit"],
     required: true,
   },
   capacidad: {
@@ -30,7 +25,7 @@ const ClaseSchema = new mongoose.Schema({
   duracion: {
     type: Number, // en minutos
     required: true,
-    min: 30,
+    min: 60,
     max: 120,
   },
   horarios: [
@@ -85,6 +80,6 @@ ClaseSchema.pre("save", function (next) {
 });
 
 // Índice para búsquedas eficientes
-ClaseSchema.index({ tipoClase: 1, profesor: 1, estado: 1 });
+ClaseSchema.index({ tipoClase: 1, estado: 1 });
 
 module.exports = mongoose.model("Clase", ClaseSchema);

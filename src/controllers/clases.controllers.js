@@ -87,37 +87,6 @@ const obtenerClasesPorTipo = async (req, res) => {
   }
 };
 
-// GET - Obtener clases por profesor
-const obtenerClasesPorProfesor = async (req, res) => {
-  try {
-    const { profesor } = req.params;
-
-    if (!profesor) {
-      return res.status(400).json({
-        success: false,
-        message: "Profesor es requerido",
-      });
-    }
-
-    const clases = await Clase.find({
-      profesor: profesor,
-      estado: { $ne: "inactiva" },
-    }).sort({ fechaCreacion: -1 });
-
-    res.status(200).json({
-      success: true,
-      data: clases,
-      message: `Clases del profesor ${profesor} obtenidas exitosamente`,
-    });
-  } catch (error) {
-    console.error("Error al obtener clases por profesor:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error interno del servidor al obtener clases por profesor",
-    });
-  }
-};
-
 // POST - Crear nueva clase
 const crearClase = async (req, res) => {
   try {
@@ -125,7 +94,6 @@ const crearClase = async (req, res) => {
       nombre,
       descripcion,
       tipoClase,
-      profesor,
       capacidad,
       duracion,
       horarios,
@@ -138,7 +106,6 @@ const crearClase = async (req, res) => {
       !nombre ||
       !descripcion ||
       !tipoClase ||
-      !profesor ||
       !capacidad ||
       !duracion ||
       !horarios ||
@@ -172,7 +139,6 @@ const crearClase = async (req, res) => {
       nombre,
       descripcion,
       tipoClase,
-      profesor,
       capacidad,
       duracion,
       horarios,
@@ -395,11 +361,6 @@ const buscarClases = async (req, res) => {
       filtro.tipoClase = tipoClase;
     }
 
-    // Filtro por profesor
-    if (profesor) {
-      filtro.profesor = profesor;
-    }
-
     // Filtro por estado
     if (estado) {
       filtro.estado = estado;
@@ -428,7 +389,6 @@ module.exports = {
   obtenerTodasLasClases,
   obtenerClasePorId,
   obtenerClasesPorTipo,
-  obtenerClasesPorProfesor,
   crearClase,
   actualizarClase,
   eliminarClase,
