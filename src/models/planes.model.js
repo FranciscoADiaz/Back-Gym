@@ -13,7 +13,7 @@ const PlanSchema = new mongoose.Schema({
   },
   tipo: {
     type: String,
-    enum: ["Musculación", "Funcional", "Completo"],
+    enum: ["Musculación", "SOLO CLASES", "Completo"],
     required: true,
   },
   precio: {

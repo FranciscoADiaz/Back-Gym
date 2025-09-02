@@ -394,25 +394,25 @@ const asignarPlanUsuarioDb = async (idUsuario, planData) => {
     const fechaVencimiento = new Date();
     fechaVencimiento.setMonth(fechaVencimiento.getMonth() + parseInt(duracion));
 
+    // Actualizar el usuario con el nuevo plan
     const usuarioActualizado = await UsuariosModel.findByIdAndUpdate(
       idUsuario,
       {
         plan: plan,
         fechaVencimiento: fechaVencimiento,
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
-    const PlanContratadoModel = require("../models/planContratado.model");
-    const planContratado = await PlanContratadoModel.create({
-      idUsuario: idUsuario,
-      plan: plan,
-      duracion: parseInt(duracion),
-      precio: precio,
-      fechaInicio: new Date(),
-      fechaVencimiento: fechaVencimiento,
-      estado: "activo",
-    });
+    if (!usuarioActualizado) {
+      return {
+        statusCode: 500,
+        msg: "Error al actualizar usuario",
+      };
+    }
+
+    // Verificar que el usuario se actualizó correctamente
+    const usuarioVerificado = await UsuariosModel.findById(idUsuario);
 
     return {
       statusCode: 200,
@@ -420,7 +420,7 @@ const asignarPlanUsuarioDb = async (idUsuario, planData) => {
     };
   } catch (error) {
     return {
-      error,
+      error: error.message,
       statusCode: 500,
       msg: "Error interno del servidor",
     };

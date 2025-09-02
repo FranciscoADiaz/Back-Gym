@@ -10,14 +10,7 @@ const PlanContratadoSchema = new Schema(
     plan: {
       type: String,
       required: true,
-      enum: [
-        "Musculación",
-        "Clases",
-        "Completo",
-        "Spinning",
-        "Funcional",
-        "Crossfit",
-      ],
+      enum: ["Musculación", "SOLO CLASES", "Completo"],
     },
     duracion: {
       type: Number,

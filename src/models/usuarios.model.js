@@ -53,14 +53,7 @@ const UsuariosSchema = new Schema({
   },
   plan: {
     type: String,
-    enum: [
-      "Sin plan",
-      "Musculación",
-      "Spinning",
-      "Funcional",
-      "Crossfit",
-      "Completo",
-    ],
+    enum: ["Sin plan", "Musculación", "SOLO CLASES", "Completo"],
     default: "Sin plan",
   },
   fechaVencimiento: {

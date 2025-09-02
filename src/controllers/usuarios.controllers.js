@@ -158,11 +158,12 @@ const asignarPlanUsuario = async (req, res) => {
     req.params.id,
     req.body
   );
-  try {
-    res.status(statusCode).json({ msg });
-  } catch {
-    res.status(statusCode).json({ error });
+
+  if (error) {
+    return res.status(statusCode).json({ error });
   }
+
+  res.status(statusCode).json({ msg });
 };
 
 const listarPlanesContratados = async (req, res) => {
@@ -241,6 +242,75 @@ const verificarPlanActivo = async (req, res) => {
   }
 };
 
+const obtenerMiPlan = async (req, res) => {
+  try {
+    // Usar el ID del usuario que viene del middleware de autenticación
+    const idUsuario = req.idUsuario;
+
+    const PlanContratadoModel = require("../models/planContratado.model");
+    const PlanesModel = require("../models/planes.model");
+
+    // Primero buscar cualquier plan del usuario (sin filtros estrictos)
+    const todosLosPlanes = await PlanContratadoModel.find({
+      idUsuario: idUsuario,
+    }).sort({ createdAt: -1 });
+
+    if (todosLosPlanes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        msg: "No tienes ningún plan asignado",
+      });
+    }
+
+    // Buscar el plan más reciente que esté activo y no vencido
+    const planContratado = await PlanContratadoModel.findOne({
+      idUsuario: idUsuario,
+      estado: "activo",
+      fechaVencimiento: { $gt: new Date() },
+    }).sort({ fechaVencimiento: -1 });
+
+    if (!planContratado) {
+      // Si no hay plan activo, mostrar el más reciente aunque esté vencido
+      const planMasReciente = todosLosPlanes[0];
+
+      // Obtener los detalles del plan
+      const plan = await PlanesModel.findOne({ tipo: planMasReciente.plan });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          ...planMasReciente.toObject(),
+          plan: plan || {
+            nombre: planMasReciente.plan,
+            tipo: planMasReciente.plan,
+          },
+        },
+        msg: "Plan encontrado (puede estar vencido)",
+      });
+    }
+
+    // Obtener los detalles del plan
+    const plan = await PlanesModel.findOne({ tipo: planContratado.plan });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...planContratado.toObject(),
+        plan: plan || {
+          nombre: planContratado.plan,
+          tipo: planContratado.plan,
+        },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      msg: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   registroUsuario,
   inicioSesionUsuario,
@@ -255,4 +325,5 @@ module.exports = {
   verificarPlanActivo,
   listarPlanesContratados,
   crearPlanPrueba,
+  obtenerMiPlan,
 };
