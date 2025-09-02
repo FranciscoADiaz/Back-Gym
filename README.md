@@ -1,59 +1,84 @@
-# 🚀 Backend - TucuGym API
+# 🏋️‍♂️ TucuGym - Sistema de Gestión de Gimnasio
 
-**Backend del sistema de gestión de gimnasio TucuGym** - API RESTful desarrollada en Node.js con Express y MongoDB.
+**TucuGym** es una aplicación web completa para la gestión de un gimnasio que permite a los usuarios contratar planes mensuales, reservar clases y administrar todas las operaciones del negocio desde un panel de administración.
 
-## 📋 Descripción
+## 📋 Descripción del Proyecto
 
-API completa para la gestión de un gimnasio que maneja usuarios, planes, clases, reservas y pagos. Desarrollada con arquitectura MVC y autenticación JWT.
+TucuGym es una plataforma integral que conecta usuarios con servicios de gimnasio, ofreciendo:
+
+- **Gestión de usuarios**: Registro, login y administración de cuentas
+- **Planes de membresía**: Contratación de planes mensuales con MercadoPago
+- **Reserva de clases**: Sistema de reservas para Spinning, Funcional y Crossfit
+- **Panel administrativo**: Control completo de usuarios, clases y reservas
+- **Información del gimnasio**: Servicios, horarios y contacto
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **Node.js** - Entorno de ejecución JavaScript
-- **Express.js** - Framework web para APIs
+### Frontend
+
+- **React.js** - Framework de interfaz de usuario
+- **React Bootstrap** - Componentes de UI responsivos
+- **Axios** - Cliente HTTP para comunicación con el backend
+- **SweetAlert2** - Alertas y notificaciones
+- **React Router** - Navegación entre páginas
+
+### Backend
+
+- **Node.js** - Entorno de ejecución
+- **Express.js** - Framework web
 - **MongoDB** - Base de datos NoSQL
 - **Mongoose** - ODM para MongoDB
 - **JWT** - Autenticación con tokens
 - **Argon2** - Encriptación de contraseñas
-- **CORS** - Cross-Origin Resource Sharing
-- **Dotenv** - Variables de entorno
+- **MercadoPago** - Procesamiento de pagos
+
+### APIs Externas
+
+- **OpenWeatherMap** - Datos del clima
+- **MercadoPago** - Procesamiento de pagos online
+
+## 🚀 Funcionalidades Principales
+
+### 👤 Para Usuarios
+
+- ✅ Registro e inicio de sesión
+- ✅ Contratación de planes mensuales (Musculación, Funcional, Completo)
+- ✅ Reserva de clases grupales (Spinning, Funcional, Crossfit)
+- ✅ Visualización de reservas activas
+- ✅ Cancelación de reservas
+- ✅ Información del clima en tiempo real
+
+### 👨‍💼 Para Administradores
+
+- ✅ Panel de administración completo
+- ✅ Gestión de usuarios (crear, editar, eliminar, asignar planes)
+- ✅ Administración de clases (CRUD completo)
+- ✅ Visualización de todas las reservas activas
+- ✅ Control de estados de usuarios y clases
 
 ## 📁 Estructura del Proyecto
 
 ```
-back-gym/
-├── src/
-│   ├── controllers/     # Controladores de la API
-│   │   ├── clases.controllers.js
-│   │   ├── usuarios.controllers.js
-│   │   ├── reserva.controllers.js
-│   │   └── pagos.controllers.js
-│   ├── models/          # Modelos de MongoDB
-│   │   ├── clases.model.js
-│   │   ├── usuarios.model.js
-│   │   ├── planContratado.model.js
-│   │   └── reserva.model.js
-│   ├── routes/          # Rutas de la API
-│   │   ├── index.routes.js
-│   │   ├── clases.routes.js
-│   │   ├── usuarios.routes.js
-│   │   ├── reserva.routes.js
-│   │   ├── admin.routes.js
-│   │   └── pagos.routes.js
-│   ├── services/        # Lógica de negocio
-│   │   ├── clases.services.js
-│   │   ├── usuarios.services.js
-│   │   ├── reserva.services.js
-│   │   └── pagos.services.js
-│   ├── middlewares/     # Middlewares personalizados
-│   │   └── auth.js
-│   ├── db/              # Configuración de base de datos
-│   │   └── config.db.js
-│   └── index.js         # Punto de entrada
-├── package.json
+Proyecto Gym/
+├── front-gym/          # Aplicación React (Frontend)
+│   ├── src/
+│   │   ├── components/ # Componentes reutilizables
+│   │   ├── pages/      # Páginas principales
+│   │   ├── helpers/    # Funciones auxiliares
+│   │   └── styles/     # Archivos CSS
+│   └── package.json
+├── back-gym/           # Servidor Node.js (Backend)
+│   ├── src/
+│   │   ├── controllers/ # Lógica de negocio
+│   │   ├── models/      # Modelos de MongoDB
+│   │   ├── routes/      # Endpoints de la API
+│   │   ├── services/    # Servicios de datos
+│   │   └── middlewares/ # Autenticación y validaciones
+│   └── package.json
 └── README.md
 ```
 
-## 🚀 Instalación y Configuración
+## ⚙️ Instalación y Configuración
 
 ### Prerrequisitos
 
@@ -61,224 +86,145 @@ back-gym/
 - MongoDB (local o Atlas)
 - Cuenta de MercadoPago (para pagos)
 
-### 1. Instalar dependencias
+### 1. Clonar el repositorio
 
 ```bash
-npm install
+git clone https://github.com/tu-usuario/tucugym.git
+cd tucugym
 ```
 
-### 2. Configurar variables de entorno
+### 2. Configurar el Backend
+
+```bash
+cd back-gym
+npm install
+```
 
 Crear archivo `.env`:
 
 ```env
 PORT=3005
-MONGO_URI=mongodb://localhost:27017/tucugym
-JWT_SECRET=mi_clave_super_secreta_123
-MERCADOPAGO_ACCESS_TOKEN=TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-OPENWEATHER_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MONGO_URI=tu_conexion_mongodb
+JWT_SECRET=tu_clave_secreta
+MERCADOPAGO_ACCESS_TOKEN=tu_token_mercadopago
+OPENWEATHER_API_KEY=tu_api_key_clima
 ```
 
-### 3. Ejecutar el servidor
+### 3. Configurar el Frontend
 
 ```bash
-# Desarrollo
+cd ../front-gym
+npm install
+```
+
+### 4. Ejecutar el proyecto
+
+```bash
+# Terminal 1 - Backend
+cd back-gym
 npm run dev
 
-# Producción
-npm start
+# Terminal 2 - Frontend
+cd front-gym
+npm run dev
 ```
 
-## 🔌 Endpoints de la API
 
-### Autenticación
 
-- `POST /api/auth/registro` - Registro de usuarios
-- `POST /api/auth/login` - Login de usuarios
+## 📱 Características Técnicas
 
-### Usuarios
+- **Responsive Design**: Interfaz adaptada a móviles, tablets y desktop
+- **Dark Mode**: Tema oscuro por defecto con diseño minimalista
+- **Autenticación JWT**: Sistema seguro de login/logout
+- **Validaciones**: Formularios con validación en tiempo real
+- **Manejo de Errores**: Interfaz amigable para errores y excepciones
+- **Optimización**: Carga rápida y experiencia fluida
 
-- `GET /api/usuarios` - Obtener todos los usuarios (admin)
-- `GET /api/usuarios/:id` - Obtener usuario por ID
-- `PUT /api/usuarios/:id` - Actualizar usuario
-- `DELETE /api/usuarios/:id` - Eliminar usuario
-- `GET /api/usuarios/:id/plan-activo` - Verificar plan activo
-- `POST /api/usuarios/:id/asignar-plan` - Asignar plan a usuario
+## 🎯 Funcionalidades Destacadas
 
-### Clases
+### Sistema de Planes
 
-- `GET /api/clases` - Obtener todas las clases
-- `POST /api/clases` - Crear nueva clase
-- `PUT /api/clases/:id` - Actualizar clase
-- `DELETE /api/clases/:id` - Eliminar clase
+- **3 tipos de planes**: Musculación, Funcional, Completo
+- **Duración flexible**: 1, 3 o 6 meses
+- **Pagos seguros**: Integración completa con MercadoPago
+- **Gestión automática**: Activación inmediata de planes
 
-### Reservas
+### Gestión de Clases
 
-- `GET /api/reservar` - Obtener reservas del usuario
-- `POST /api/reservar` - Crear nueva reserva
-- `DELETE /api/reservar/:id` - Cancelar reserva
-- `GET /api/reservar/usuario/:idUsuario` - Obtener reservas de usuario específico
+- **3 tipos de clases**: Spinning, Funcional, Crossfit
+- **Horarios flexibles**: Configuración de días y horarios
+- **Control de capacidad**: Límite de personas por clase
+- **Estado de clases**: Activa, Inactiva, Suspendida
 
-### Admin
+### Panel Administrativo
 
-- `GET /api/admin/todas-las-reservas` - Obtener todas las reservas activas
+- **Dashboard completo**: Vista general de reservas y usuarios
+- **Gestión de usuarios**: CRUD completo con asignación de planes
+- **Administración de clases**: Creación y edición de clases
+- **Monitoreo en tiempo real**: Estado de reservas y usuarios
 
-### Pagos
+## 👥 Integrantes del Equipo
 
-- `POST /api/pagos/crear-preferencia` - Crear preferencia de MercadoPago
+### Francisco Díaz
 
-## 🔐 Autenticación y Autorización
+- **Rol**: Desarrollador Full Stack
+- **Especialidad**: React, Node.js, MongoDB
+- **Contribución**: Arquitectura del sistema, desarrollo frontend y backend
 
-### JWT Tokens
+### Valentín
 
-- Los tokens se generan al hacer login
-- Expiración configurable
-- Middleware `auth.js` para proteger rutas
-
-### Roles de Usuario
-
-- **Usuario común**: Acceso a reservas y planes
-- **Admin**: Acceso completo a todas las funcionalidades
-
-## 📊 Modelos de Datos
-
-### Usuario
-
-```javascript
-{
-  nombre: String,
-  email: String,
-  contrasenia: String (encriptada),
-  rol: String (usuario/admin),
-  plan: String,
-  activo: Boolean
-}
-```
-
-### Clase
-
-```javascript
-{
-  nombre: String,
-  tipo: String,
-  duracion: Number,
-  capacidad: Number,
-  activa: Boolean
-}
-```
-
-### Reserva
-
-```javascript
-{
-  idUsuario: ObjectId,
-  idClase: ObjectId,
-  fecha: Date,
-  activa: Boolean
-}
-```
-
-### Plan Contratado
-
-```javascript
-{
-  idUsuario: ObjectId,
-  plan: String,
-  fechaInicio: Date,
-  fechaFin: Date,
-  activo: Boolean
-}
-```
-
-## 🔧 Configuración de Base de Datos
-
-### MongoDB
-
-- Conexión configurada en `src/db/config.db.js`
-- Soporte para MongoDB local y Atlas
-- Índices optimizados para consultas frecuentes
-
-### Variables de Entorno Requeridas
-
-| Variable                   | Descripción            | Ejemplo                                     |
-| -------------------------- | ---------------------- | ------------------------------------------- |
-| `PORT`                     | Puerto del servidor    | `3005`                                      |
-| `MONGO_URI`                | URL de MongoDB         | `mongodb://localhost:27017/tucugym`         |
-| `JWT_SECRET`               | Clave secreta JWT      | `mi_clave_super_secreta_123`                |
-| `MERCADOPAGO_ACCESS_TOKEN` | Token MercadoPago      | `TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
-| `OPENWEATHER_API_KEY`      | API Key OpenWeatherMap | `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`          |
-
-## 🧪 Testing
-
-```bash
-# Ejecutar tests
-npm test
-
-# Tests en modo watch
-npm run test:watch
-```
-
-## 📈 Monitoreo y Logs
-
-- Logs de errores en consola
-- Validación de datos con Mongoose
-- Manejo de errores centralizado
-- Respuestas estandarizadas
+- **Rol**: Desarrollador Full Stack
+- **Especialidad**: JavaScript, Express, APIs
+- **Contribución**: Desarrollo backend, integración de APIs externas
 
 ## 🚀 Despliegue
 
-### Railway/Heroku
+### Frontend (Vercel/Netlify)
 
 ```bash
+cd front-gym
+npm run build
+# Subir carpeta dist/ a Vercel o Netlify
+```
+
+### Backend (Railway/Heroku)
+
+```bash
+cd back-gym
 # Configurar variables de entorno en la plataforma
 # Deploy automático desde GitHub
 ```
 
-### Docker
+## 📈 Próximas Mejoras
 
-```dockerfile
-FROM node:16-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-EXPOSE 3005
-CMD ["npm", "start"]
-```
+- [ ] Notificaciones push para recordatorios de clases
+- [ ] Sistema de puntuación y reviews de clases
+- [ ] Integración con redes sociales
+- [ ] App móvil nativa (React Native)
+- [ ] Sistema de fidelización y descuentos
+- [ ] Reportes y analytics avanzados
 
-## 🔒 Seguridad
+## 📄 Licencia
 
-- **Encriptación**: Contraseñas encriptadas con Argon2
-- **JWT**: Tokens seguros para autenticación
-- **CORS**: Configurado para frontend específico
-- **Validación**: Datos validados antes de procesar
-- **Sanitización**: Entrada de datos sanitizada
-
-## 📝 Scripts Disponibles
-
-```json
-{
-  "dev": "nodemon src/index.js",
-  "start": "node src/index.js",
-  "test": "jest",
-  "test:watch": "jest --watch"
-}
-```
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
 ## 🤝 Contribuciones
 
+Las contribuciones son bienvenidas. Por favor:
+
 1. Fork el proyecto
-2. Crea una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
 ## 📞 Contacto
 
-- **Desarrollador**: Francisco Díaz
 - **Email**: contacto@tucugym.com
 - **GitHub**: [@FranciscoADiaz](https://github.com/FranciscoADiaz)
+- **LinkedIn**: [Francisco Díaz](https://linkedin.com/in/francisco-diaz)
 
 ---
 
-⭐ Si este backend te fue útil, ¡no olvides darle una estrella en GitHub!
+⭐ Si este proyecto te fue útil, ¡no olvides darle una estrella en GitHub!
+
