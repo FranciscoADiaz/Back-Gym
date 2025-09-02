@@ -97,7 +97,6 @@ const crearClase = async (req, res) => {
       capacidad,
       duracion,
       horarios,
-      precio,
       imagen,
     } = req.body;
 
@@ -108,8 +107,7 @@ const crearClase = async (req, res) => {
       !tipoClase ||
       !capacidad ||
       !duracion ||
-      !horarios ||
-      !precio
+      !horarios
     ) {
       return res.status(400).json({
         success: false,
@@ -142,7 +140,6 @@ const crearClase = async (req, res) => {
       capacidad,
       duracion,
       horarios,
-      precio,
       imagen: imagen || "",
     });
 

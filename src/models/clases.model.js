@@ -49,11 +49,6 @@ const ClaseSchema = new mongoose.Schema({
       },
     },
   ],
-  precio: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
   estado: {
     type: String,
     enum: ["activa", "inactiva", "suspendida"],
