@@ -145,10 +145,11 @@ const obtenerTodosLosUsuariosDb = async () => {
       })
     );
 
-    return {
+    const result = {
       usuarios: usuariosConPlanes,
       statusCode: 200,
     };
+    return result;
   } catch (error) {
     return {
       error,
@@ -379,28 +380,38 @@ const asignarPlanUsuarioDb = async (idUsuario, planData) => {
       };
     }
 
+    // Calcular fechas
+    const fechaInicio = new Date();
     const fechaVencimiento = new Date();
     fechaVencimiento.setMonth(fechaVencimiento.getMonth() + parseInt(duracion));
 
-    // Actualizar el usuario con el nuevo plan
-    const usuarioActualizado = await UsuariosModel.findByIdAndUpdate(
-      idUsuario,
+    // Cerrar cualquier plan activo previo del usuario en PlanContratado
+    const PlanContratadoModel = require("../models/planContratado.model");
+    await PlanContratadoModel.updateMany(
       {
-        plan: plan,
-        fechaVencimiento: fechaVencimiento,
+        idUsuario,
+        estado: "activo",
+        fechaVencimiento: { $gt: new Date() },
       },
-      { new: true, runValidators: true }
+      { $set: { estado: "cancelado" } }
     );
 
-    if (!usuarioActualizado) {
-      return {
-        statusCode: 500,
-        msg: "Error al actualizar usuario",
-      };
-    }
+    // Crear registro del nuevo plan contratado
+    const nuevoPlan = new PlanContratadoModel({
+      idUsuario,
+      plan,
+      duracion,
+      precio,
+      fechaInicio,
+      fechaVencimiento,
+      estado: "activo",
+    });
+    await nuevoPlan.save();
 
-    // Verificar que el usuario se actualizó correctamente
-    const usuarioVerificado = await UsuariosModel.findById(idUsuario);
+    // Sincronizar datos en el documento del usuario (guardar la instancia para garantizar persistencia)
+    usuario.plan = plan;
+    usuario.fechaVencimiento = fechaVencimiento;
+    await usuario.save({ validateBeforeSave: true });
 
     return {
       statusCode: 200,
@@ -446,6 +457,47 @@ const verificarPlanActivoDb = async (idUsuario) => {
       error,
       statusCode: 500,
       msg: "Error interno del servidor",
+    };
+  }
+};
+
+// Sincroniza usuarios.plan y usuarios.fechaVencimiento desde planContratado
+const sincronizarPlanesUsuariosDb = async () => {
+  try {
+    const PlanContratadoModel = require("../models/planContratado.model");
+    const usuarios = await UsuariosModel.find();
+
+    let actualizados = 0;
+    for (const usuario of usuarios) {
+      const planActivo = await PlanContratadoModel.findOne({
+        idUsuario: usuario._id,
+        estado: "activo",
+        fechaVencimiento: { $gt: new Date() },
+      }).sort({ fechaVencimiento: -1 });
+
+      if (planActivo) {
+        usuario.plan = planActivo.plan;
+        usuario.fechaVencimiento = planActivo.fechaVencimiento;
+        await usuario.save();
+        actualizados++;
+      } else if (usuario.plan !== "Sin plan" || usuario.fechaVencimiento) {
+        usuario.plan = "Sin plan";
+        usuario.fechaVencimiento = null;
+        await usuario.save();
+        actualizados++;
+      }
+    }
+
+    return {
+      statusCode: 200,
+      msg: `Sincronización completada. Usuarios actualizados: ${actualizados}`,
+      actualizados,
+    };
+  } catch (error) {
+    return {
+      error: error.message,
+      statusCode: 500,
+      msg: "Error al sincronizar planes",
     };
   }
 };
