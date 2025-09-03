@@ -9,6 +9,7 @@ const {
   migrarContraseniasDb,
   asignarPlanUsuarioDb,
   verificarPlanActivoDb,
+  sincronizarPlanesUsuariosDb,
 } = require("../services/usuarios.services");
 const { validationResult } = require("express-validator");
 
@@ -326,4 +327,12 @@ module.exports = {
   listarPlanesContratados,
   crearPlanPrueba,
   obtenerMiPlan,
+  sincronizarPlanesUsuarios: async (req, res) => {
+    const { statusCode, msg, error, actualizados } =
+      await sincronizarPlanesUsuariosDb();
+    if (error) {
+      return res.status(statusCode).json({ msg, error });
+    }
+    res.status(statusCode).json({ msg, actualizados });
+  },
 };

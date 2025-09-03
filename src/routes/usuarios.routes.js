@@ -15,6 +15,7 @@ const {
   listarPlanesContratados,
   crearPlanPrueba,
   obtenerMiPlan,
+  sincronizarPlanesUsuarios,
 } = require("../controllers/usuarios.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
@@ -108,6 +109,9 @@ router.get("/mi-plan", auth("usuario"), obtenerMiPlan);
 
 // RUTA TEMPORAL PARA LISTAR TODOS LOS PLANES CONTRATADOS (solo admin)
 router.get("/planes-contratados", auth("admin"), listarPlanesContratados);
+
+// RUTA ADMIN para sincronizar planes a colección usuarios
+router.post("/sincronizar-planes", auth("admin"), sincronizarPlanesUsuarios);
 
 // RUTA TEMPORAL PARA CREAR PLAN DE PRUEBA
 router.post("/:idUsuario/crear-plan-prueba", crearPlanPrueba);

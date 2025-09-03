@@ -1,17 +1,24 @@
 const mongoose = require("mongoose");
 
-const MONGO_URL =
+// Aceptar tanto MONGO_URI como MONGO_URL para compatibilidad
+const MONGO_URI =
+  process.env.MONGO_URI ||
   process.env.MONGO_URL ||
-  "mongodb+srv://Francisco-Diaz:H1KrJorVua27EqnT@cluster0.veepr1p.mongodb.net/test?retryWrites=true&w=majority";
+  "mongodb://127.0.0.1:27017/test"; // fallback local seguro
 
-mongoose.connect(MONGO_URL);
+mongoose.connect(MONGO_URI);
 
 mongoose.connection.on("connected", () => {
-  console.log("🔗 Mongoose conectado a MongoDB");
+  const { name, host } = mongoose.connection;
+  if (process.env.NODE_ENV !== "test") {
+    console.log(`🔗 Mongoose conectado → db: ${name} @ ${host}`);
+  }
 });
 
 mongoose.connection.on("error", (err) => {
-  console.error("❌ Error de conexión de Mongoose:", err);
+  if (process.env.NODE_ENV !== "test") {
+    console.error("❌ Error de conexión de Mongoose:", err?.message || err);
+  }
 });
 
 mongoose.connection.on("disconnected", () => {
