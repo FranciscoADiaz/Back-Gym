@@ -10,6 +10,7 @@ const {
   asignarPlanUsuarioDb,
   verificarPlanActivoDb,
   sincronizarPlanesUsuariosDb,
+  verificarDisponibilidadUsuarioDb,
 } = require("../services/usuarios.services");
 const { validationResult } = require("express-validator");
 
@@ -334,5 +335,16 @@ module.exports = {
       return res.status(statusCode).json({ msg, error });
     }
     res.status(statusCode).json({ msg, actualizados });
+  },
+  verificarDisponibilidadUsuario: async (req, res) => {
+    const { nombreUsuario, emailUsuario } = req.query;
+    const { statusCode, msg, disponibleUsuario, disponibleEmail, error } =
+      await verificarDisponibilidadUsuarioDb({ nombreUsuario, emailUsuario });
+    if (error) {
+      return res.status(statusCode).json({ msg, error });
+    }
+    return res
+      .status(statusCode)
+      .json({ msg, disponibleUsuario, disponibleEmail });
   },
 };

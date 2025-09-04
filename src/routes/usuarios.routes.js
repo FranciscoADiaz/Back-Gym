@@ -16,6 +16,7 @@ const {
   crearPlanPrueba,
   obtenerMiPlan,
   sincronizarPlanesUsuarios,
+  verificarDisponibilidadUsuario,
 } = require("../controllers/usuarios.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
@@ -143,5 +144,8 @@ router.delete(
   auth("admin"),
   eliminarUsuario
 );
+
+// DISPONIBILIDAD DE USUARIO/EMAIL (público)
+router.get("/disponibilidad", verificarDisponibilidadUsuario);
 
 module.exports = router;
