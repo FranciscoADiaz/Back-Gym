@@ -4,23 +4,62 @@ const jwt = require("jsonwebtoken");
 
 const registroUsuarioDb = async (body) => {
   try {
-    const nuevoUsuario = new UsuariosModel(body);
+    const { nombreUsuario, emailUsuario, contrasenia } = body;
+
+    // Verificar existencia previa de usuario o email para responder 409 en vez de 500
+    const existente = await UsuariosModel.findOne({
+      $or: [
+        { nombreUsuario: (nombreUsuario || "").toLowerCase() },
+        { emailUsuario: (emailUsuario || "").toLowerCase() },
+      ],
+    });
+
+    if (existente) {
+      return {
+        statusCode: 409,
+        msg: "El usuario o email ya existe",
+      };
+    }
+
+    const nuevoUsuario = new UsuariosModel({
+      nombreUsuario,
+      emailUsuario,
+      contrasenia,
+    });
     nuevoUsuario.contrasenia = await argon.hash(nuevoUsuario.contrasenia);
     await nuevoUsuario.save();
 
     /* para cuando configure nodemailer sino no me deja registrar
-  const { registroExitoso } = require("../helpers/messages.helpers");
-   await registroExitoso(nuevoUsuario.emailUsuario, nuevoUsuario.nombreUsuario);
-   */
+    const { registroExitoso } = require("../helpers/messages.helpers");
+    await registroExitoso(nuevoUsuario.emailUsuario, nuevoUsuario.nombreUsuario);
+    */
 
     return {
       statusCode: 201,
       msg: "Recibirás un correo de confirmación 💪",
     };
   } catch (error) {
+    // Duplicados de índice único (Mongo 11000)
+    if (error && (error.code === 11000 || error.name === "MongoServerError")) {
+      return {
+        statusCode: 409,
+        msg: "El usuario o email ya existe",
+      };
+    }
+
+    // Errores de validación del modelo
+    if (error && error.name === "ValidationError") {
+      const firstMessage = Object.values(error.errors || {})[0]?.message;
+      return {
+        statusCode: 400,
+        msg: firstMessage || "Datos inválidos",
+      };
+    }
+
     return {
       error,
       statusCode: 500,
+      msg: "Error interno del servidor",
     };
   }
 };
@@ -502,6 +541,57 @@ const sincronizarPlanesUsuariosDb = async () => {
   }
 };
 
+// Verifica disponibilidad de nombreUsuario y/o emailUsuario
+const verificarDisponibilidadUsuarioDb = async ({
+  nombreUsuario,
+  emailUsuario,
+}) => {
+  try {
+    const query = [];
+    if (nombreUsuario) {
+      query.push({ nombreUsuario: String(nombreUsuario).toLowerCase() });
+    }
+    if (emailUsuario) {
+      query.push({ emailUsuario: String(emailUsuario).toLowerCase() });
+    }
+
+    if (query.length === 0) {
+      return {
+        statusCode: 400,
+        msg: "Debe proporcionar nombreUsuario y/o emailUsuario",
+      };
+    }
+
+    const existente = await UsuariosModel.findOne({ $or: query });
+
+    const disponibleUsuario = nombreUsuario
+      ? !(
+          existente &&
+          existente.nombreUsuario === String(nombreUsuario).toLowerCase()
+        )
+      : undefined;
+    const disponibleEmail = emailUsuario
+      ? !(
+          existente &&
+          existente.emailUsuario === String(emailUsuario).toLowerCase()
+        )
+      : undefined;
+
+    return {
+      statusCode: 200,
+      msg: "Consulta de disponibilidad exitosa",
+      disponibleUsuario,
+      disponibleEmail,
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      msg: "Error interno del servidor",
+      error,
+    };
+  }
+};
+
 module.exports = {
   registroUsuarioDb,
   inicioSesionUsuarioDb,
@@ -514,4 +604,5 @@ module.exports = {
   migrarContraseniasDb,
   asignarPlanUsuarioDb,
   verificarPlanActivoDb,
+  verificarDisponibilidadUsuarioDb,
 };
