@@ -1,15 +1,20 @@
 const transporter = require("./nodemailer.helpers");
+const { welcomeTemplate } = require("./emailTemplates.helpers");
 
 const registroExitoso = async (emailUsuario, nombreUsuario) => {
   const info = await transporter.sendMail({
-    from: `"Tucu-Gym" <${process.env.MAILGUN_USER}>`, 
+    from: `"Tucu-Gym" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
     to: `${emailUsuario}`,
     subject: `Bienvenido  ${nombreUsuario} ✔`,
     text: "En breve podrás iniciar sesión",
-    html: `
-    <img src="https://png.pngtree.com/png-clipart/20231015/original/pngtree-man-character-training-at-the-gym-vector-illustration-png-image_13302900.png" alt="gif">
-    <h1>Gracias por registrarte en nuestra web </h1> ${nombreUsuario}
-    `,
+    html: welcomeTemplate({
+      nombreUsuario,
+      urlLogin: `${
+        process.env.URL_FRONT || "https://front-gym-rho.vercel.app"
+      }/iniciarsesion`,
+      brandColor: "#6366f1",
+      accentColor: "#06b6d4",
+    }),
   });
 
   return {
@@ -20,7 +25,7 @@ const registroExitoso = async (emailUsuario, nombreUsuario) => {
 
 const recoveryPassEmail = async (emailUsuario, token) => {
   const info = await transporter.sendMail({
-    from: `"Tucu-Gym" <${process.env.MAILGUN_USER}>`, 
+    from: `"Tucu-Gym" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
     to: `${emailUsuario}`,
     subject: `Recuperación de contraseña`,
     html: `

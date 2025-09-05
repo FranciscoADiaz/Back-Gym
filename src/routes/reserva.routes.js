@@ -10,9 +10,15 @@ const {
   cancelarReserva,
   verificarCupos,
   obtenerReservasPorFecha,
+  obtenerProfesoresHorarios,
 } = require("../controllers/reserva.controllers");
 
-// Middleware de autenticación para todas las rutas
+// Endpoint público para obtener horarios de profesores (sin auth)
+router.get("/profesores-horarios", (req, res) =>
+  obtenerProfesoresHorarios(req, res)
+);
+
+// Middleware de autenticación para las demás rutas
 router.use(auth("usuario"));
 
 // POST - Crear una nueva reserva

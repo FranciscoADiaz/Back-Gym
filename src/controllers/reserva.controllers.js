@@ -8,6 +8,7 @@ const {
   verificarCuposService,
   obtenerReservasPorFechaService,
 } = require("../services/reserva.services");
+const { PROFESORES_HORARIOS } = require("../config/profesores.config");
 
 const crearReserva = async (req, res) => {
   try {
@@ -18,6 +19,23 @@ const crearReserva = async (req, res) => {
       return res.status(400).json({
         success: false,
         msg: "Todos los campos son requeridos",
+      });
+    }
+
+    // Validar que el día de la semana coincida con el del profesor
+    const { PROFESORES_HORARIOS } = require("../config/profesores.config");
+
+    // fecha viene como YYYY-MM-DD (string)
+    const parts = String(fecha)
+      .split("-")
+      .map((v) => parseInt(v, 10));
+    const fechaLocal = new Date(parts[0], parts[1] - 1, parts[2]);
+    const dow = fechaLocal.getDay();
+
+    if (!PROFESORES_HORARIOS[profesor]?.dias.includes(dow)) {
+      return res.status(400).json({
+        success: false,
+        msg: "El profesor seleccionado no trabaja el día elegido",
       });
     }
 
@@ -249,4 +267,7 @@ module.exports = {
   obtenerTodasLasReservasAdmin,
   verificarCupos,
   obtenerReservasPorFecha,
+  obtenerProfesoresHorarios: (req, res) => {
+    res.status(200).json({ success: true, data: PROFESORES_HORARIOS });
+  },
 };

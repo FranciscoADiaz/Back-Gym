@@ -29,10 +29,19 @@ const registroUsuarioDb = async (body) => {
     nuevoUsuario.contrasenia = await argon.hash(nuevoUsuario.contrasenia);
     await nuevoUsuario.save();
 
-    /* para cuando configure nodemailer sino no me deja registrar
-    const { registroExitoso } = require("../helpers/messages.helpers");
-    await registroExitoso(nuevoUsuario.emailUsuario, nuevoUsuario.nombreUsuario);
-    */
+    // enviar email de bienvenida (no bloquear el flujo si falla)
+    try {
+      const { registroExitoso } = require("../helpers/messages.helpers");
+      await registroExitoso(
+        nuevoUsuario.emailUsuario,
+        nuevoUsuario.nombreUsuario
+      );
+    } catch (e) {
+      // log opcional; continuar sin interrumpir el registro
+      if (process.env.NODE_ENV !== "test") {
+        console.warn("No se pudo enviar email de bienvenida:", e?.message || e);
+      }
+    }
 
     return {
       statusCode: 201,
