@@ -1,6 +1,11 @@
 const UsuariosModel = require("../models/usuarios.model");
 const argon = require("argon2");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const {
+  registroExitoso,
+  recoveryPassEmail,
+} = require("../helpers/messages.helpers");
 
 const registroUsuarioDb = async (body) => {
   try {
@@ -31,7 +36,6 @@ const registroUsuarioDb = async (body) => {
 
     // enviar email de bienvenida (no bloquear el flujo si falla)
     try {
-      const { registroExitoso } = require("../helpers/messages.helpers");
       await registroExitoso(
         nuevoUsuario.emailUsuario,
         nuevoUsuario.nombreUsuario
@@ -133,6 +137,97 @@ const inicioSesionUsuarioDb = async (body) => {
       error,
       statusCode: 500,
       msg: "Error interno del servidor",
+    };
+  }
+};
+
+const solicitarRecuperacionContraseniaDb = async (emailUsuario = "") => {
+  try {
+    if (!emailUsuario) {
+      return {
+        statusCode: 400,
+        msg: "El email es requerido",
+      };
+    }
+
+    const emailNormalizado = String(emailUsuario).toLowerCase().trim();
+    const usuario = await UsuariosModel.findOne({ emailUsuario: emailNormalizado });
+
+    // No revelar si el email existe o no
+    if (!usuario) {
+      return {
+        statusCode: 200,
+        msg: "Si el email existe, enviaremos un enlace para recuperar la contraseña",
+      };
+    }
+
+    const tokenPlano = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(tokenPlano).digest("hex");
+
+    usuario.passwordResetToken = tokenHash;
+    usuario.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutos
+    await usuario.save();
+
+    try {
+      await recoveryPassEmail(usuario.emailUsuario, tokenPlano, usuario.nombreUsuario);
+    } catch (errorEmail) {
+      console.warn("No se pudo enviar email de recuperación:", errorEmail?.message || errorEmail);
+      return {
+        statusCode: 500,
+        msg: "No pudimos enviar el correo en este momento. Intenta nuevamente más tarde.",
+      };
+    }
+
+    return {
+      statusCode: 200,
+      msg: "Enviamos un correo con instrucciones para recuperar tu contraseña",
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      msg: "Error al solicitar la recuperación de contraseña",
+      error,
+    };
+  }
+};
+
+const restablecerContraseniaDb = async ({ token, nuevaContrasenia }) => {
+  try {
+    if (!token || !nuevaContrasenia) {
+      return {
+        statusCode: 400,
+        msg: "Token y nueva contraseña son requeridos",
+      };
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const usuario = await UsuariosModel.findOne({
+      passwordResetToken: tokenHash,
+      passwordResetExpires: { $gt: new Date() },
+    }).select("+passwordResetToken +passwordResetExpires");
+
+    if (!usuario) {
+      return {
+        statusCode: 400,
+        msg: "El enlace es inválido o expiró. Solicita uno nuevo.",
+      };
+    }
+
+    usuario.contrasenia = await argon.hash(nuevaContrasenia);
+    usuario.passwordResetToken = null;
+    usuario.passwordResetExpires = null;
+    await usuario.save();
+
+    return {
+      statusCode: 200,
+      msg: "Tu contraseña fue actualizada correctamente",
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      msg: "Error al restablecer la contraseña",
+      error,
     };
   }
 };
@@ -387,34 +482,7 @@ const obtenerUsuarioPorIdDb = async (idUsuario) => {
   }
 };
 
-const migrarContraseniasDb = async () => {
-  try {
-    const bcrypt = require("bcrypt");
-    const usuarios = await UsuariosModel.find();
-    let migrados = 0;
 
-    for (const usuario of usuarios) {
-      if (usuario.contrasenia.startsWith("$2")) {
-        const nuevaContrasenia = "temp123456";
-        usuario.contrasenia = await argon.hash(nuevaContrasenia);
-        await usuario.save();
-        migrados++;
-      }
-    }
-
-    return {
-      statusCode: 200,
-      msg: `Migración completada. ${migrados} usuarios migrados a Argon2`,
-      usuariosMigrados: migrados,
-    };
-  } catch (error) {
-    return {
-      error,
-      statusCode: 500,
-      msg: "Error en la migración",
-    };
-  }
-};
 
 const asignarPlanUsuarioDb = async (idUsuario, planData) => {
   try {
@@ -610,8 +678,10 @@ module.exports = {
   crearUsuarioDb,
   actualizarUsuarioDb,
   obtenerUsuarioPorIdDb,
-  migrarContraseniasDb,
+  // migrarContraseniasDb, // Comentada - función de migración ya no necesaria
   asignarPlanUsuarioDb,
   verificarPlanActivoDb,
   verificarDisponibilidadUsuarioDb,
+  solicitarRecuperacionContraseniaDb,
+  restablecerContraseniaDb,
 };

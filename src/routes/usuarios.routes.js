@@ -9,7 +9,7 @@ const {
   crearUsuario,
   actualizarUsuario,
   obtenerUsuarioPorId,
-  migrarContrasenias,
+  // migrarContrasenias, // Comentada - función de migración ya no necesaria
   asignarPlanUsuario,
   verificarPlanActivo,
   listarPlanesContratados,
@@ -17,6 +17,8 @@ const {
   obtenerMiPlan,
   sincronizarPlanesUsuarios,
   verificarDisponibilidadUsuario,
+  solicitarRecuperacionContrasenia,
+  restablecerContrasenia,
 } = require("../controllers/usuarios.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
@@ -65,6 +67,28 @@ router.post(
   inicioSesionUsuario
 );
 
+router.post(
+  "/recuperar-contrasenia",
+  [
+    check("emailUsuario", "Campo EMAIL está vacío").notEmpty(),
+    check("emailUsuario", "ERROR. Formato EMAIL incorrecto").isEmail(),
+  ],
+  solicitarRecuperacionContrasenia
+);
+
+router.post(
+  "/restablecer-contrasenia",
+  [
+    check("token", "El token es requerido").notEmpty(),
+    check("nuevaContrasenia", "Campo CONTRASEÑA esta vacío").notEmpty(),
+    check(
+      "nuevaContrasenia",
+      "ERROR. Cantidad mínima 8 carácteres y máxima de 32"
+    ).isLength({ min: 8, max: 32 }),
+  ],
+  restablecerContrasenia
+);
+
 router.put(
   "/enableDisable/:id",
   [
@@ -80,8 +104,8 @@ router.put(
 // RUTA PARA CREAR USUARIOS (solo admin)
 router.post("/crear", auth("admin"), crearUsuario);
 
-// RUTA PARA MIGRAR CONTRASEÑAS A ARGON2 (solo admin)
-router.post("/migrar-contrasenias", auth("admin"), migrarContrasenias);
+// RUTA PARA MIGRAR CONTRASEÑAS A ARGON2 (solo admin) - COMENTADA, YA NO ES NECESARIA
+// router.post("/migrar-contrasenias", auth("admin"), migrarContrasenias);
 
 // RUTA PARA ASIGNAR PLAN A USUARIO (solo admin)
 router.post(
