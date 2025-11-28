@@ -6,18 +6,23 @@ const {
   eliminarUsuarioDb,
   crearUsuarioDb,
   actualizarUsuarioDb,
-  migrarContraseniasDb,
+  // migrarContraseniasDb, // Comentada - función de migración ya no necesaria
   asignarPlanUsuarioDb,
   verificarPlanActivoDb,
   sincronizarPlanesUsuariosDb,
   verificarDisponibilidadUsuarioDb,
+  solicitarRecuperacionContraseniaDb,
+  restablecerContraseniaDb,
 } = require("../services/usuarios.services");
 const { validationResult } = require("express-validator");
+
+const obtenerPrimerError = (errores) =>
+  errores.array()[0]?.msg || "Datos inválidos";
 
 const registroUsuario = async (req, res) => {
   const respuesta = validationResult(req);
   if (!respuesta.isEmpty()) {
-    return res.status(422).json({ msg: respuesta.array() });
+    return res.status(422).json({ msg: obtenerPrimerError(respuesta) });
   }
 
   const { msg, statusCode, error } = await registroUsuarioDb(req.body);
@@ -32,7 +37,7 @@ const registroUsuario = async (req, res) => {
 const inicioSesionUsuario = async (req, res) => {
   const respuesta = validationResult(req);
   if (!respuesta.isEmpty()) {
-    return res.status(422).json({ msg: respuesta.array() });
+    return res.status(422).json({ msg: obtenerPrimerError(respuesta) });
   }
 
   const { success, msg, statusCode, token, error, rolUsuario } =
@@ -52,10 +57,41 @@ const inicioSesionUsuario = async (req, res) => {
   }
 };
 
+const solicitarRecuperacionContrasenia = async (req, res) => {
+  const errores = validationResult(req);
+  if (!errores.isEmpty()) {
+    return res.status(422).json({ msg: obtenerPrimerError(errores) });
+  }
+
+  const { statusCode, msg, error } =
+    await solicitarRecuperacionContraseniaDb(req.body.emailUsuario);
+
+  if (error) {
+    return res.status(statusCode).json({ msg, error });
+  }
+
+  return res.status(statusCode).json({ msg });
+};
+
+const restablecerContrasenia = async (req, res) => {
+  const errores = validationResult(req);
+  if (!errores.isEmpty()) {
+    return res.status(422).json({ msg: obtenerPrimerError(errores) });
+  }
+
+  const { statusCode, msg, error } = await restablecerContraseniaDb(req.body);
+
+  if (error) {
+    return res.status(statusCode).json({ msg, error });
+  }
+
+  return res.status(statusCode).json({ msg });
+};
+
 const habilitarDeshabilitarUsuario = async (req, res) => {
   const respuesta = validationResult(req);
   if (!respuesta.isEmpty()) {
-    return res.status(422).json({ msg: respuesta.array() });
+    return res.status(422).json({ msg: obtenerPrimerError(respuesta) });
   }
 
   const { msg, statusCode, error } = await habilitarDeshabilitarUsuarioDb(
@@ -80,7 +116,7 @@ const obtenerTodosLosUsuarios = async (req, res) => {
 const eliminarUsuario = async (req, res) => {
   const errores = validationResult(req);
   if (!errores.isEmpty()) {
-    return res.status(422).json({ msg: errores.array() });
+    return res.status(422).json({ msg: obtenerPrimerError(errores) });
   }
 
   const { msg, statusCode, error } = await eliminarUsuarioDb(req.params.id);
@@ -132,19 +168,6 @@ const obtenerUsuarioPorId = async (req, res) => {
   );
   try {
     res.status(statusCode).json({ usuario });
-  } catch {
-    res.status(statusCode).json({ error });
-  }
-};
-
-const migrarContrasenias = async (req, res) => {
-  const { msg, statusCode, error, usuariosMigrados } =
-    await migrarContraseniasDb();
-  try {
-    res.status(statusCode).json({
-      msg,
-      usuariosMigrados: usuariosMigrados || 0,
-    });
   } catch {
     res.status(statusCode).json({ error });
   }
@@ -316,13 +339,15 @@ const obtenerMiPlan = async (req, res) => {
 module.exports = {
   registroUsuario,
   inicioSesionUsuario,
+  solicitarRecuperacionContrasenia,
+  restablecerContrasenia,
   habilitarDeshabilitarUsuario,
   obtenerTodosLosUsuarios,
   eliminarUsuario,
   crearUsuario,
   actualizarUsuario,
   obtenerUsuarioPorId,
-  migrarContrasenias,
+  // migrarContrasenias, // Comentada - función de migración ya no necesaria
   asignarPlanUsuario,
   verificarPlanActivo,
   listarPlanesContratados,
