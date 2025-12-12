@@ -3,12 +3,33 @@ const { Payment } = require("mercadopago");
 const UsuariosModel = require("../models/usuarios.model");
 const PlanContratadoModel = require("../models/planContratado.model");
 
+const FRONT_URL_RAW =
+  (process.env.URL_FRONT && process.env.URL_FRONT.trim()) ||
+  (process.env.FRONTEND_URL && process.env.FRONTEND_URL.trim()) ||
+  "";
+const BACK_URL_RAW =
+  (process.env.BACKEND_URL && process.env.BACKEND_URL.trim()) || "";
+
+// Fallbacks seguros para evitar back_urls vacíos
+const FRONT_URL = FRONT_URL_RAW || "http://localhost:5173";
+const BACK_URL = BACK_URL_RAW || "http://localhost:3005";
+
 const crearPreferenciaDb = async (body, usuario) => {
   try {
     const { plan, duracion, precio } = body;
-    const { nombreUsuario, emailUsuario, _id: idUsuario } = usuario;
+    // El payload del token puede venir con idUsuario (login) o _id (objeto completo)
+    const idUsuario = usuario?._id || usuario?.idUsuario;
+    const nombreUsuario = usuario?.nombreUsuario || "";
+    const emailUsuario = usuario?.emailUsuario || "";
 
-    // Crear preferencia de MercadoPago
+    if (!idUsuario) {
+      throw new Error("No se pudo obtener el idUsuario del token");
+    }
+
+    // Crear preferencia de MercadoPago con metadata (para no depender del título/description)
+    const front = FRONT_URL.replace(/\/$/, "");
+    const back = BACK_URL.replace(/\/$/, "");
+
     const preferenceData = {
       items: [
         {
@@ -22,13 +43,19 @@ const crearPreferenciaDb = async (body, usuario) => {
         email: emailUsuario,
       },
       back_urls: {
-        success: `${process.env.FRONTEND_URL}/pago-exitoso`,
-        failure: `${process.env.FRONTEND_URL}/pago-fallido`,
-        pending: `${process.env.FRONTEND_URL}/pago-pendiente`,
+        success: `${front}/pago-exitoso`,
+        failure: `${front}/pago-fallido`,
+        pending: `${front}/pago-pendiente`,
       },
       auto_return: "approved",
       external_reference: `${idUsuario}_${Date.now()}`,
-      notification_url: `${process.env.BACKEND_URL}/api/pagos/webhook`,
+      notification_url: `${back}/api/pagos/webhook`,
+      metadata: {
+        userId: idUsuario.toString(),
+        plan,
+        duracion,
+        precio,
+      },
     };
 
     const response = await preference.create({ body: preferenceData });
@@ -60,36 +87,34 @@ const procesarWebhookDb = async (body) => {
       const payment = await paymentClient.get({ id: data.id });
 
       if (payment.status === "approved") {
-        // Extraer información del external_reference
-        const [userId, timestamp] = payment.external_reference.split("_");
+        const meta = payment.metadata || {};
+        const userId =
+          meta.userId ||
+          (payment.external_reference || "").split("_")[0] ||
+          null;
+        const plan = meta.plan;
+        const duracion = meta.duracion;
+        const precio = payment.transaction_amount;
 
-        // Extraer información del título del item
-        const title = payment.description;
-        const planMatch = title.match(/Plan (.+?) - (\d+) mes/);
-
-        if (planMatch) {
-          const plan = planMatch[1];
-          const duracion = parseInt(planMatch[2]);
-
-          // Calcular fecha de vencimiento
+        if (userId && plan && duracion) {
           const fechaVencimiento = new Date();
-          fechaVencimiento.setMonth(fechaVencimiento.getMonth() + duracion);
+          fechaVencimiento.setMonth(
+            fechaVencimiento.getMonth() + parseInt(duracion)
+          );
 
-          // Guardar plan contratado
           await PlanContratadoModel.create({
             idUsuario: userId,
             plan,
-            duracion,
-            precio: payment.transaction_amount,
+            duracion: parseInt(duracion),
+            precio,
             fechaVencimiento,
             paymentId: payment.id,
             preferenceId: payment.preference_id,
           });
 
-          // Actualizar usuario
           await UsuariosModel.findByIdAndUpdate(userId, {
-            plan: plan,
-            fechaVencimiento: fechaVencimiento,
+            plan,
+            fechaVencimiento,
           });
         }
       }
@@ -119,7 +144,10 @@ const verificarPagoDb = async (paymentId) => {
       success: true,
       status: payment.status,
       amount: payment.transaction_amount,
-      description: payment.description,
+      description:
+        payment.description ||
+        payment.additional_info?.items?.[0]?.title ||
+        "",
       statusCode: 200,
     };
   } catch (error) {
