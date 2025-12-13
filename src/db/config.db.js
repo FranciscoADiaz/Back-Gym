@@ -11,7 +11,8 @@ mongoose.connect(MONGO_URI);
 mongoose.connection.on("connected", () => {
   const { name, host } = mongoose.connection;
   if (process.env.NODE_ENV !== "test") {
-    console.log(`🔗 Mongoose conectado → db: ${name} @ ${host}`);
+    // Log breve y sin adornos para evitar ruido
+    console.log(`Mongo conectado: ${name} @ ${host}`);
   }
 });
 

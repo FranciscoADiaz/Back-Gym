@@ -30,19 +30,20 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verificar la configuración al iniciar (opcional, para debugging)
-if (user && pass) {
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error("❌ Error en configuración de email:", error.message);
-      console.error(
-        "💡 Verifica que SMTP_USER y SMTP_PASS estén correctos en .env"
-      );
-    } else {
-      console.log("✅ Servidor de email configurado correctamente");
-      console.log(`📧 Enviando desde: ${user}`);
-    }
-  });
-}
+// Verificar la configuración al iniciar (opcional, deshabilitado para reducir ruido)
+// Si necesitas debug, descomenta el bloque siguiente:
+// if (user && pass) {
+//   transporter.verify((error) => {
+//     if (error) {
+//       console.error("❌ Error en configuración de email:", error.message);
+//       console.error(
+//         "💡 Verifica que SMTP_USER y SMTP_PASS estén correctos en .env"
+//       );
+//     } else {
+//       console.log("✅ Servidor de email configurado correctamente");
+//       console.log(`📧 Enviando desde: ${user}`);
+//     }
+//   });
+// }
 
 module.exports = transporter;

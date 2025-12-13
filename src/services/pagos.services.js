@@ -3,16 +3,12 @@ const { Payment } = require("mercadopago");
 const UsuariosModel = require("../models/usuarios.model");
 const PlanContratadoModel = require("../models/planContratado.model");
 
-const FRONT_URL_RAW =
-  (process.env.URL_FRONT && process.env.URL_FRONT.trim()) ||
+const FRONT_URL =
   (process.env.FRONTEND_URL && process.env.FRONTEND_URL.trim()) ||
-  "";
-const BACK_URL_RAW =
-  (process.env.BACKEND_URL && process.env.BACKEND_URL.trim()) || "";
-
-// Fallbacks seguros para evitar back_urls vacíos
-const FRONT_URL = FRONT_URL_RAW || "http://localhost:5173";
-const BACK_URL = BACK_URL_RAW || "http://localhost:3005";
+  "http://localhost:5173";
+const BACK_URL =
+  (process.env.BACKEND_URL && process.env.BACKEND_URL.trim()) ||
+  "http://localhost:3005";
 
 const crearPreferenciaDb = async (body, usuario) => {
   try {
@@ -29,6 +25,16 @@ const crearPreferenciaDb = async (body, usuario) => {
     // Crear preferencia de MercadoPago con metadata (para no depender del título/description)
     const front = FRONT_URL.replace(/\/$/, "");
     const back = BACK_URL.replace(/\/$/, "");
+
+    // Validar URLs requeridas por MercadoPago
+    if (!front || !/^https?:\/\//.test(front)) {
+      return {
+        success: false,
+        msg: "Falta configurar FRONTEND_URL con http/https",
+        statusCode: 500,
+      };
+    }
+    // Logs de depuración deshabilitados para producción
 
     const preferenceData = {
       items: [
@@ -47,7 +53,6 @@ const crearPreferenciaDb = async (body, usuario) => {
         failure: `${front}/pago-fallido`,
         pending: `${front}/pago-pendiente`,
       },
-      auto_return: "approved",
       external_reference: `${idUsuario}_${Date.now()}`,
       notification_url: `${back}/api/pagos/webhook`,
       metadata: {
