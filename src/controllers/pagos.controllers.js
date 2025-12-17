@@ -4,7 +4,7 @@ const {
   verificarPagoDb,
 } = require("../services/pagos.services");
 
-const crearPreferencia = async (req, res) => {
+const createPaymentPreference = async (req, res) => {
   try {
     const { success, init_point, preference_id, statusCode, msg } =
       await crearPreferenciaDb(req.body, req.usuario);
@@ -24,7 +24,7 @@ const crearPreferencia = async (req, res) => {
   }
 };
 
-const procesarWebhook = async (req, res) => {
+const processPaymentWebhook = async (req, res) => {
   try {
     const { success, statusCode, msg } = await procesarWebhookDb(req.body);
 
@@ -39,7 +39,7 @@ const procesarWebhook = async (req, res) => {
   }
 };
 
-const verificarPago = async (req, res) => {
+const verifyPayment = async (req, res) => {
   try {
     const { paymentId } = req.params;
     const { success, status, amount, description, statusCode, msg } =
@@ -62,8 +62,8 @@ const verificarPago = async (req, res) => {
 };
 
 module.exports = {
-  crearPreferencia,
-  procesarWebhook,
-  verificarPago,
+  createPaymentPreference,
+  processPaymentWebhook,
+  verifyPayment,
 };
 

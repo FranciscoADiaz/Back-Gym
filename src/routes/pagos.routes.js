@@ -1,12 +1,13 @@
 const { Router } = require("express");
 const router = Router();
 const {
-  crearPreferencia,
-  procesarWebhook,
-  verificarPago,
+  createPaymentPreference,
+  processPaymentWebhook,
+  verifyPayment,
 } = require("../controllers/pagos.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
+const validateRequest = require("../middlewares/validateRequest");
 
 // POST - Crear preferencia de pago (usuario autenticado)
 router.post(
@@ -17,18 +18,20 @@ router.post(
     check("precio", "El precio es requerido").isNumeric(),
   ],
   auth("usuario"),
-  crearPreferencia
+  validateRequest,
+  createPaymentPreference
 );
 
 // POST - Webhook para recibir notificaciones de pago (sin autenticación)
-router.post("/webhook", procesarWebhook);
+router.post("/webhook", processPaymentWebhook);
 
 // GET - Verificar estado de pago (usuario autenticado)
 router.get(
   "/verificar/:paymentId",
   [check("paymentId", "El ID del pago es requerido").notEmpty()],
   auth("usuario"),
-  verificarPago
+  validateRequest,
+  verifyPayment
 );
 
 module.exports = router;
