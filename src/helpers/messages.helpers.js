@@ -4,6 +4,62 @@ const {
   recoveryTemplate,
 } = require("./emailTemplates.helpers");
 
+const sanitize = (value = "") => value.toString().trim();
+const formatContactHtml = ({ nombre, email, mensaje }) => {
+  const safeMessage = sanitize(mensaje).replace(/\n/g, "<br>");
+  return `
+    <h2>Nuevo mensaje de contacto</h2>
+    <p><strong>Nombre:</strong> ${sanitize(nombre)}</p>
+    <p><strong>Email:</strong> ${sanitize(email)}</p>
+    <p><strong>Mensaje:</strong></p>
+    <p>${safeMessage}</p>
+  `;
+};
+
+const sendContactEmail = async ({ nombre, email, mensaje }) => {
+  try {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return {
+        success: false,
+        statusCode: 500,
+        error: "Credenciales SMTP no configuradas",
+      };
+    }
+
+    const destinatario =
+      process.env.CONTACT_EMAIL ||
+      process.env.FROM_EMAIL ||
+      process.env.SMTP_USER;
+
+    const info = await transporter.sendMail({
+      from: `"Contacto TucuGym" <${
+        process.env.FROM_EMAIL || process.env.SMTP_USER
+      }>`,
+      to: destinatario,
+      replyTo: sanitize(email),
+      subject: `Nuevo mensaje de ${sanitize(nombre)}`,
+      text: `Nombre: ${sanitize(nombre)}\nEmail: ${sanitize(
+        email
+      )}\n\nMensaje:\n${sanitize(mensaje)}`,
+      html: formatContactHtml({ nombre, email, mensaje }),
+    });
+
+    return {
+      success: true,
+      statusCode: 200,
+      msg: "Mensaje enviado correctamente",
+      messageId: info.messageId,
+    };
+  } catch (error) {
+    console.error("❌ Error al enviar mensaje de contacto:", error.message);
+    return {
+      success: false,
+      statusCode: 500,
+      error: "No se pudo enviar el mensaje. Intenta más tarde.",
+    };
+  }
+};
+
 /**
  * Envía email de bienvenida cuando un usuario se registra
  * @param {string} emailUsuario - Email del usuario
@@ -77,4 +133,5 @@ const recoveryPassEmail = async (emailUsuario, token, nombreUsuario = "") => {
 module.exports = {
   registroExitoso,
   recoveryPassEmail,
+  sendContactEmail,
 };
